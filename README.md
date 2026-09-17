@@ -5,8 +5,8 @@ Bot Telegram publik untuk memantau tinggi muka air `Angke Hulu` dari XML Posko B
 ## Fitur
 
 - `/air`, `/ping`, `/start`, `/help` untuk publik.
-- `/system` untuk owner/admin.
-- Telegram Rich Message dengan details collapsed dan button refresh/peta.
+- `/system`, `/notify <pesan>`, dan `/notifyair` untuk owner/admin.
+- Telegram Rich Message dengan details collapsed, button refresh, dan link peta pada nama station.
 - Cache memory dengan TTL 60 detik dan stale fallback 15 menit.
 - Notifikasi ke group forum/thread ketika `STATUS_SIAGA` berubah.
 - Worker monitoring terpisah dengan state SQLite persisten.
@@ -25,11 +25,15 @@ bun run check
 bun run start:bot
 ```
 
+Dengan `APP_ROLE=bot` dan `TELEGRAM_WEBHOOK_ENABLED=false`, `bun run dev` juga langsung menjalankan bot dalam mode polling. `PORT` dipakai untuk HTTP Elysia (health check dan webhook opsional), baik saat lokal maupun di Docker; port ini tidak mengubah mekanisme polling.
+
 Worker dijalankan terpisah pada terminal lain:
 
 ```bash
-APP_ROLE=monitor bun run start:monitor
+APP_ROLE=monitor PORT=3001 bun run start:monitor
 ```
+
+Pada contoh lokal, `INTERNAL_STATUS_URL` menunjuk ke monitor di `127.0.0.1:3001`. Saat Compose digunakan, nilainya dioverride menjadi `http://monitor:3000/internal/status` dan database monitor dioverride ke path container `/data/state/monitor.sqlite`.
 
 ## Quality gate
 

@@ -107,6 +107,10 @@ Angka rotasi adalah default awal dan dapat disesuaikan dengan kebijakan host. Ja
 
 Cache memory saja cukup untuk command on-demand, tetapi notifikasi perubahan memerlukan minimal state perubahan terakhir. Keputusan awal memakai SQLite melalui `bun:sqlite` pada named volume milik service `monitor`. Detail schema, migration, dan backup ada di [konsep SQLite](./concepts/18-sqlite-state-and-migrations.md).
 
+Pada `docker-compose.example.yml`, volume `monitor_state` dipasang ke `/data/state` dan environment service `monitor` menetapkan `MONITOR_STATE_DB_PATH=/data/state/monitor.sqlite`. Path ini hanya berlaku di dalam container. Untuk development langsung dengan Bun, gunakan `MONITOR_STATE_DB_PATH=./data/state/monitor.sqlite`; jangan memakai `/data/state/monitor.sqlite` kecuali directory tersebut memang disediakan oleh runtime.
+
+Dengan `docker compose up -d`, data berada pada volume Docker yang bernama sesuai project Compose (umumnya `<project>_monitor_state`). `docker compose down` tidak menghapus volume; `docker compose down -v` baru menghapusnya dan harus diperlakukan sebagai operasi penghapusan state.
+
 Tanpa state persisten, worker dapat mengirim notifikasi ulang setelah restart atau kehilangan perubahan yang terjadi selama worker mati.
 
 Service `bot` tidak membuka file SQLite monitor secara langsung. Jika `/system` membutuhkan status worker, bot mengambil ringkasan melalui internal status endpoint pada jaringan Compose dengan service token.

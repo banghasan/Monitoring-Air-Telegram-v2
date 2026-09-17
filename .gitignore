@@ -4,4 +4,7 @@
 node_modules/
 dist/
 coverage/
+data/state/*.sqlite
+data/state/*.sqlite-shm
+data/state/*.sqlite-wal
 .DS_Store

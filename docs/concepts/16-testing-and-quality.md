@@ -130,8 +130,11 @@ Fixture disimpan di `test/fixtures/`, bukan di `src/` dan bukan mengambil data l
 - threshold pada details diverifikasi sebagai tabel Rich Message;
 - button berada di Rich Message;
 - refresh mencoba edit sebelum fallback pesan baru;
-- `/ping` mengukur durasi process secara deterministic;
+- `/ping` mengukur response API Telegram dengan alur placeholder lalu edit;
 - `/system` menolak user non-owner/admin;
+- `/notify` mengirim ke target monitor hanya untuk owner/admin;
+- `/notifyair` mengirim snapshot `/air` ke target monitor hanya untuk owner/admin;
+- `/start` dan `/help` tidak menampilkan command admin untuk user biasa;
 - secret tidak muncul dalam payload, response, atau log.
 
 ### Worker dan HTTP

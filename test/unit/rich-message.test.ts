@@ -3,6 +3,8 @@ import type { WaterReading } from "../../src/domain/water/types.js";
 import {
   buildAirRichMessage,
   buildHelpRichMessage,
+  buildManualMonitorRichMessage,
+  buildPingRichMessage,
   buildVersionRichMessage,
 } from "../../src/interfaces/telegram/rich-message-builder.js";
 
@@ -47,7 +49,7 @@ test("air message memakai link teks, details collapsed, dan button Rich Message"
     expect(table?.type).toBe("table");
     if (table?.type === "table") {
       expect(table.cells.map((row) => row.map((cell) => cell.text))).toEqual([
-        ["Status", "Batas TMA"],
+        ["Status", "Rentang TMA"],
         ["🔴 BAHAYA", "> 300 cm"],
         ["🟡 SIAGA", "250–300 cm"],
         ["🔵 WASPADA", "150–250 cm"],
@@ -60,12 +62,14 @@ test("air message memakai link teks, details collapsed, dan button Rich Message"
   expect(JSON.stringify(message)).toContain("P.S. Angke Hulu 1");
   expect(JSON.stringify(message)).toContain("Status : Normal");
   expect(JSON.stringify(message)).toContain("callback_data");
-  expect(JSON.stringify(message)).toContain("    ├ 🕒");
+  expect(JSON.stringify(message)).toContain("\u00a0\u00a0\u00a0\u00a0├ 🕒");
   expect(JSON.stringify(message)).toContain(
     '"type":"code","text":"17 September 2026 15.10.00 WIB"',
   );
-  expect(JSON.stringify(message)).toContain("    ├ 📈 Naik · Ketinggian: -44 cm");
-  expect(JSON.stringify(message)).toContain("    └ 🟢 Status : Normal");
+  expect(JSON.stringify(message)).toContain(
+    '"text":["\u00a0\u00a0\u00a0\u00a0├ 📈 Naik · Ketinggian: ",{"type":"code","text":"-44 cm"}]',
+  );
+  expect(JSON.stringify(message)).toContain("\u00a0\u00a0\u00a0\u00a0└ 🟢 Status : Normal");
   expect(JSON.stringify(blocks.filter((block) => block.type !== "details"))).not.toContain(
     "📥 Diambil aplikasi:",
   );
@@ -76,7 +80,7 @@ test("air message memakai link teks, details collapsed, dan button Rich Message"
   expect(JSON.stringify(message)).not.toContain("pukul");
   expect(JSON.stringify(message)).not.toContain("🌊 📈");
   expect(JSON.stringify(message)).not.toContain("🚦");
-  expect(JSON.stringify(message)).toContain("Batas TMA");
+  expect(JSON.stringify(message)).toContain("Rentang TMA");
   expect(JSON.stringify(message)).toContain("Legenda: 📈 naik · 📉 turun · ➡️ tetap");
   expect(JSON.stringify(message)).toContain('"type":"url"');
   expect(JSON.stringify(message)).toContain(
@@ -103,11 +107,23 @@ test("air message tidak membuat link peta jika koordinat tidak tersedia", () => 
   expect(serialized).not.toContain("🗺️ Buka Peta");
 });
 
+test("air message menjelaskan cache stale secara ringkas", () => {
+  const message = buildAirRichMessage(reading, "Asia/Jakarta", {
+    kind: "cache",
+    sourceFresh: false,
+  });
+  const serialized = JSON.stringify(message);
+  expect(serialized).toContain("📦 Data: cache (stale)");
+  expect(serialized).toContain("⚠️ Sumber belum diperbarui; data terakhir tetap ditampilkan.");
+});
+
 test("help juga dikirim sebagai Rich Message", () => {
   const message = buildHelpRichMessage(reading.sourceUrl);
   expect(message.blocks?.some((block) => block.type === "heading")).toBe(true);
   const serialized = JSON.stringify(message);
-  expect(serialized).toContain("/system");
+  expect(serialized).not.toContain("/system");
+  expect(serialized).not.toContain("/notify");
+  expect(serialized).not.toContain("/notifyair");
   expect(serialized).toContain("/version, /ver, atau /versi");
   expect(serialized).toContain("Hasanudin H Syafaat");
   expect(serialized).toContain("@hasanudinhs");
@@ -127,10 +143,42 @@ test("help juga dikirim sebagai Rich Message", () => {
       },
     ]);
   }
+
+  const adminMessage = JSON.stringify(
+    buildHelpRichMessage(reading.sourceUrl, { includeAdminCommands: true }),
+  );
+  expect(adminMessage).toContain("/system");
+  expect(adminMessage).toContain("/notify <pesan>");
+  expect(adminMessage).toContain("/notifyair");
 });
 
 test("version message menampilkan versi aplikasi", () => {
   const message = buildVersionRichMessage("1.2.3");
   expect(JSON.stringify(message)).toContain("📦 VERSI BOT");
   expect(JSON.stringify(message)).toContain("🏷️ Versi aplikasi: 1.2.3");
+});
+
+test("ping message menampilkan waktu respons, bukan waktu proses bot", () => {
+  const pending = JSON.stringify(buildPingRichMessage());
+  expect(pending).toContain("🏓 PONG");
+  expect(pending).toContain('"text":["└ ⏱️ Waktu respons: ",{"type":"code","text":"mengukur…"}]');
+  expect(pending).not.toContain("Waktu proses bot");
+
+  const message = JSON.stringify(buildPingRichMessage(12.34));
+  expect(message).toContain('"type":"code","text":"12.34 ms (0.0123 detik)"');
+  expect(message).not.toContain("Waktu proses bot");
+});
+
+test("pesan manual monitor memakai Rich Message dan waktu monospace", () => {
+  const message = buildManualMonitorRichMessage(
+    "Uji notifikasi monitor",
+    "Hasanudin H Syafaat (@hasanudinhs)",
+    "Asia/Jakarta",
+    new Date("2026-09-17T11:35:00.000Z"),
+  );
+  const serialized = JSON.stringify(message);
+  expect(serialized).toContain("📣 PESAN MONITOR");
+  expect(serialized).toContain("Uji notifikasi monitor");
+  expect(serialized).toContain("Hasanudin H Syafaat (@hasanudinhs)");
+  expect(serialized).toContain('"type":"code","text":"17 September 2026 18.35.00 WIB"');
 });

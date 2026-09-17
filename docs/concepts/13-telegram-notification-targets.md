@@ -44,6 +44,16 @@ Untuk satu perubahan:
 
 Pengiriman boleh dibatasi concurrency-nya agar satu event tidak membebani Telegram API.
 
+## Pesan manual owner/admin
+
+`/notify <pesan>` memakai target yang sama dengan worker monitoring. Command ini berguna untuk menguji permission group/topic dan menyampaikan informasi operasional tanpa memalsukan event perubahan status. Pengiriman dilakukan ke semua target yang dikonfigurasi, memakai `chat_id` serta `thread_id` masing-masing, dan tidak mengubah delivery state atau baseline SQLite worker.
+
+`/notifyair` juga memakai target yang sama, tetapi payload-nya adalah hasil `/air` dari cache/sumber saat command dijalankan. Payload ini dikirim sebagai Rich Message lengkap, bukan event perubahan status, sehingga tidak menyentuh baseline atau delivery state worker.
+
+Kedua command hanya tersedia secara fungsional untuk `TELEGRAM_OWNER_ID` dan `TELEGRAM_ADMIN_IDS`. Kegagalan dicatat per target dalam log JSON dan diringkas pada `/system`; tidak ada broadcast error ke target monitor.
+
+Pada `/start` dan `/help`, informasi ketiga command internal (`/system`, `/notify`, dan `/notifyair`) hanya muncul untuk user owner/admin. Menu command publik tetap tidak memuat command internal.
+
 ## `/system`
 
 Owner/admin dapat melihat:

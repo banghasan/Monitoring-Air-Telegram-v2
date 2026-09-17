@@ -19,6 +19,7 @@ type InputRichBlock = InputRichBlockDefinition<never>;
 type InputRichMessage = InputRichMessageDefinition<never>;
 
 export const REFRESH_CALLBACK = "air:refresh";
+const TREE_INDENT = "\u00a0\u00a0\u00a0\u00a0";
 
 export interface AirMessageFreshness {
   kind?: "fresh" | "cache" | "stale";
@@ -69,21 +70,42 @@ function tableCell(text: RichText, isHeader = false): RichBlockTableCell {
   };
 }
 
+function freshnessLabel(freshness: AirMessageFreshness): string | undefined {
+  if (!freshness.kind) return undefined;
+  if (freshness.sourceFresh === false && freshness.kind !== "stale") {
+    return `${freshness.kind} (stale)`;
+  }
+  return freshness.kind;
+}
+
+function freshnessWarning(freshness: AirMessageFreshness): string | undefined {
+  if (freshness.kind === "stale") {
+    return "⚠️ Menampilkan data cache terakhir; sumber belum berhasil diperbarui.";
+  }
+  if (freshness.sourceFresh === false) {
+    return "⚠️ Sumber belum diperbarui; data terakhir tetap ditampilkan.";
+  }
+  return undefined;
+}
+
 function dataBlocks(
   reading: WaterReading,
   timezone: string,
   freshness: AirMessageFreshness = {},
 ): InputRichBlock[] {
   const trend = trendFromReading(reading);
+  const freshnessText = freshnessLabel(freshness);
+  const warningText = freshnessWarning(freshness);
   return [
     paragraph(stationText(reading)),
-    paragraph(["    ├ 🕒 ", monospaceText(formatObservedAt(reading, timezone))]),
-    paragraph(`    ├ ${trendLabel(trend)} · Ketinggian: ${formatCm(reading.heightRaw)} cm`),
-    paragraph(`    └ ${statusEmoji(reading.statusRaw)} ${reading.statusRaw}`),
-    ...(freshness.kind ? [paragraph(`📦 Data: ${freshness.kind}`)] : []),
-    ...(freshness.kind === "stale" || freshness.sourceFresh === false
-      ? [paragraph("⚠️ Data terakhir berhasil diambil, tetapi belum dapat diperbarui.")]
-      : []),
+    paragraph([`${TREE_INDENT}├ 🕒 `, monospaceText(formatObservedAt(reading, timezone))]),
+    paragraph([
+      `${TREE_INDENT}├ ${trendLabel(trend)} · Ketinggian: `,
+      monospaceText(`${formatCm(reading.heightRaw)} cm`),
+    ]),
+    paragraph(`${TREE_INDENT}└ ${statusEmoji(reading.statusRaw)} ${reading.statusRaw}`),
+    ...(freshnessText ? [paragraph(`📦 Data: ${freshnessText}`)] : []),
+    ...(warningText ? [paragraph(warningText)] : []),
   ];
 }
 
@@ -102,14 +124,14 @@ function detailsBlocks(reading: WaterReading, timezone: string): InputRichBlock[
           is_bordered: true,
           is_compact: true,
           cells: [
-            [tableCell("Status", true), tableCell("Batas TMA", true)],
+            [tableCell("Status", true), tableCell("Rentang TMA", true)],
             ...thresholdSummary(reading.thresholds).map((row) => [
               tableCell(row.status),
               tableCell(row.range),
             ]),
           ],
         },
-        paragraph("🧭 Legenda: 📈 naik · 📉 turun · ➡️ tetap"),
+        paragraph("Legenda: 📈 naik · 📉 turun · ➡️ tetap"),
       ],
     },
   ];
@@ -148,20 +170,37 @@ export function buildAirNotificationRichMessage(
     { type: "heading", size: 2, text: "🔔 PEMBARUAN TINGGI MUKA AIR" },
     ...dataBlocks(reading, timezone),
     paragraph(
-      `📣 Perubahan status:\n    └ ${previousStatus} → ${reading.statusRaw.replace(/^status\s*:\s*/i, "")}`,
+      `📣 Perubahan status:\n${TREE_INDENT}└ ${previousStatus} → ${reading.statusRaw.replace(/^status\s*:\s*/i, "")}`,
     ),
-    paragraph(
-      `🌊 Pembacaan saat perubahan:\n    ├ Ketinggian: ${formatCm(reading.heightRaw)} cm\n    └ Arah: ${trendLabel(trend)}`,
-    ),
+    paragraph([
+      `📊 Pembacaan saat perubahan:\n${TREE_INDENT}├ Ketinggian: `,
+      monospaceText(`${formatCm(reading.heightRaw)} cm`),
+      `\n${TREE_INDENT}└ Arah: ${trendLabel(trend)}`,
+    ]),
     divider(),
     ...detailsBlocks(reading, timezone),
   ];
   return { blocks };
 }
 
+export interface HelpMessageOptions {
+  includeAdminCommands?: boolean;
+}
+
 export function buildHelpRichMessage(
   sourceUrl = "https://poskobanjir.dsdadki.web.id/xmldata.xml",
+  options: HelpMessageOptions = {},
 ): InputRichMessage {
+  const adminCommandBlocks: InputRichBlock[] = options.includeAdminCommands
+    ? [
+        divider(),
+        paragraph("🔒 Perintah owner/admin"),
+        paragraph("/system — informasi sistem bot (owner/admin)"),
+        paragraph("/notify <pesan> — kirim test/informasi ke grup monitor (owner/admin)"),
+        paragraph("/notifyair — kirim hasil /air ke grup monitor (owner/admin)"),
+      ]
+    : [];
+
   return {
     blocks: [
       { type: "heading", size: 2, text: "🌊 Bot Pemantauan Air" },
@@ -173,10 +212,10 @@ export function buildHelpRichMessage(
       divider(),
       paragraph("📚 Perintah"),
       paragraph("/air — cek tinggi muka air Angke Hulu"),
-      paragraph("/ping — cek respons bot dan waktu proses"),
+      paragraph("/ping — ukur waktu respons Telegram"),
       paragraph("/version, /ver, atau /versi — informasi versi bot"),
       paragraph("/start atau /help — tampilkan bantuan ini"),
-      paragraph("🔒 /system — informasi sistem (khusus owner/admin)"),
+      ...adminCommandBlocks,
       divider(),
       paragraph("👨‍💻 Pengembang"),
       paragraph([
@@ -208,14 +247,54 @@ export function buildVersionRichMessage(version: string): InputRichMessage {
   };
 }
 
-export function buildPingRichMessage(milliseconds: number): InputRichMessage {
-  const seconds = milliseconds / 1000;
+export function buildPingRichMessage(milliseconds?: number): InputRichMessage {
+  const response =
+    milliseconds === undefined
+      ? "mengukur…"
+      : `${milliseconds.toFixed(2)} ms (${(milliseconds / 1000).toFixed(4)} detik)`;
   return {
     blocks: [
       { type: "heading", size: 2, text: "🏓 PONG" },
-      paragraph(
-        `└ ⏱️ Waktu proses bot: ${milliseconds.toFixed(2)} ms (${seconds.toFixed(4)} detik)`,
-      ),
+      paragraph(["└ ⏱️ Waktu respons: ", monospaceText(response)]),
+    ],
+  };
+}
+
+export function buildManualMonitorRichMessage(
+  message: string,
+  sender: string,
+  timezone: string,
+  createdAt = new Date(),
+): InputRichMessage {
+  return {
+    blocks: [
+      { type: "heading", size: 2, text: "📣 PESAN MONITOR" },
+      paragraph(`👤 Dari: ${sender}`),
+      paragraph(["🕒 ", monospaceText(formatFetchedAt(createdAt.toISOString(), timezone))]),
+      divider(),
+      paragraph(message),
+    ],
+  };
+}
+
+export function buildMonitorDispatchResultRichMessage(
+  sentCount: number,
+  totalCount: number,
+  failedTargets: string[] = [],
+): InputRichMessage {
+  const title =
+    sentCount === totalCount
+      ? "✅ TERKIRIM KE MONITOR"
+      : sentCount > 0
+        ? "⚠️ SEBAGIAN TERKIRIM"
+        : "❌ TIDAK TERKIRIM KE MONITOR";
+  return {
+    blocks: [
+      { type: "heading", size: 2, text: title },
+      paragraph(`📡 Target monitor: ${sentCount}/${totalCount} berhasil`),
+      ...(failedTargets.length > 0
+        ? [paragraph(`⚠️ Target gagal: ${failedTargets.join(", ")}`)]
+        : []),
     ],
   };
 }

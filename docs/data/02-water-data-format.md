@@ -52,7 +52,7 @@ Threshold ditampilkan dari record aktif, bukan angka hardcode. `SIAGA4=1` tersed
 
 ## Status
 
-`STATUS_SIAGA` dari sumber adalah status utama, misalnya `Status : Normal`. Bot tidak menghitung ulang status bahaya dari angka tinggi air untuk menggantikan status sumber.
+`STATUS_SIAGA` dari sumber adalah status utama, misalnya `Status : Normal`. Bot tidak menghitung ulang status bahaya dari angka tinggi air untuk menggantikan status sumber. Emoji status ditampilkan satu kali pada baris status utama.
 
 ## Keterangan siaga
 

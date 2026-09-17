@@ -1,4 +1,4 @@
-import type { InputRichMessage as InputRichMessageDefinition } from "@grammyjs/types";
+import type { InputRichMessage as InputRichMessageDefinition, Message } from "@grammyjs/types";
 import { Bot } from "grammy";
 import type { NotificationTarget, TelegramChatId } from "../../config/config.js";
 
@@ -30,7 +30,7 @@ export class TelegramRichClient {
     chatId: TelegramChatId,
     message: InputRichMessage,
     threadId?: number,
-  ): Promise<unknown> {
+  ): Promise<Message.RichMessageMessage> {
     return this.bot.api.sendRichMessage(
       chatId,
       message,

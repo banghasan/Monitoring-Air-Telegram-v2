@@ -32,10 +32,12 @@ Jangan menyimpan histori tinggi air lengkap pada MVP. Jika histori dibutuhkan, i
 Path database dikonfigurasi melalui environment:
 
 ```dotenv
-MONITOR_STATE_DB_PATH=/data/state/monitor.sqlite
+MONITOR_STATE_DB_PATH=./data/state/monitor.sqlite
 ```
 
-Database berada pada named volume Docker, bukan di image, repository, atau filesystem sementara container.
+Saat development di host, path relatif tersebut menghasilkan `data/state/monitor.sqlite` di project. Saat deployment Compose, service `monitor` dioverride ke `/data/state/monitor.sqlite` dan directory tersebut dipasang ke named volume `monitor_state`. Jadi `/data/state/monitor.sqlite` adalah path di dalam container, bukan path `/data` pada host dan bukan file yang dibawa oleh image.
+
+Repository membuat parent directory jika belum ada. File SQLite lokal diabaikan Git; database production tetap disimpan pada named volume dan tidak dimasukkan ke repository.
 
 ## Keputusan akses lintas container
 

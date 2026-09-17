@@ -43,14 +43,14 @@ MONITOR_INTERVAL_SECONDS=60
 MONITOR_ENABLED=true
 MONITOR_DRY_RUN=false
 MONITOR_TARGETS_JSON=[]
-MONITOR_STATE_DB_PATH=/data/state/monitor.sqlite
+MONITOR_STATE_DB_PATH=./data/state/monitor.sqlite
 UPSTREAM_MAX_ATTEMPTS=3
 UPSTREAM_RETRY_BACKOFF_SECONDS=5,15
 TELEGRAM_SEND_MAX_ATTEMPTS=3
 TELEGRAM_SEND_RETRY_BACKOFF_SECONDS=5,15
 
 # Internal bot <-> monitor status
-INTERNAL_STATUS_URL=http://monitor:3000/internal/status
+INTERNAL_STATUS_URL=http://127.0.0.1:3001/internal/status
 INTERNAL_STATUS_TOKEN=replace-with-random-secret
 
 # Public command protection
@@ -69,13 +69,28 @@ PUBLIC_COMMAND_COOLDOWN_SECONDS=1
 - Nilai webhook flag selain `true` atau `false` ditolak saat startup; tidak otomatis dianggap `false`.
 - `TELEGRAM_MODE` sudah tidak digunakan; jika masih ada pada environment lama, startup menolaknya agar migrasi tidak ambigu.
 
+`PORT` adalah port HTTP Elysia untuk health check dan webhook opsional. Variable ini dipakai baik saat lokal maupun di Docker; mode polling tidak membutuhkan port publik Telegram.
+
+## Path lokal dan path container
+
+`MONITOR_STATE_DB_PATH` mengikuti filesystem process yang membukanya, sehingga nilainya perlu dibedakan menurut runtime:
+
+| Runtime | Nilai | Arti |
+| --- | --- | --- |
+| `bun run dev` atau `bun run start:monitor` di host | `./data/state/monitor.sqlite` | File di dalam project, relatif terhadap current working directory. Directory dibuat otomatis oleh repository SQLite. |
+| service `monitor` pada Compose | `/data/state/monitor.sqlite` | File di dalam container pada mount `/data/state`. |
+
+Pada Compose, named volume `monitor_state` dipasang ke `/data/state`, sehingga file tidak berada di layer image dan tetap ada ketika container dibuat ulang. `/data/state/monitor.sqlite` bukan path host yang harus dibuat manual. Lokasi fisik host dikelola Docker; gunakan `docker volume inspect` jika perlu memeriksanya.
+
+Service `bot` tidak membuka database ini. Hanya service `monitor` yang memakai `MONITOR_STATE_DB_PATH` untuk state worker.
+
 ## Monitoring variable
 
 - `MONITOR_ENABLED` mengaktifkan worker monitoring.
 - `MONITOR_INTERVAL_SECONDS` mengatur interval pemeriksaan XML; default awal 60 detik.
 - `MONITOR_DRY_RUN=true` menjalankan fetch, parsing, compare, dan logging tanpa mengirim request Telegram. State baseline tetap diperbarui agar dry-run tidak menghasilkan event yang sama berulang setiap siklus.
 - `MONITOR_TARGETS_JSON` untuk MVP berisi tepat satu group forum beserta `thread_id`.
-- `MONITOR_STATE_DB_PATH` menunjuk database SQLite pada named volume milik service `monitor`.
+- `MONITOR_STATE_DB_PATH` menunjuk database SQLite worker; gunakan path lokal saat development dan `/data/state/monitor.sqlite` saat service Compose.
 - `UPSTREAM_MAX_ATTEMPTS` mengatur jumlah percobaan fetch dalam satu siklus; default 3.
 - `UPSTREAM_RETRY_BACKOFF_SECONDS` mengatur jeda retry upstream, misalnya `5,15` detik.
 - `TELEGRAM_SEND_MAX_ATTEMPTS` mengatur jumlah percobaan pengiriman per target; default 3.
@@ -105,7 +120,7 @@ Worker awal dijalankan sebagai satu replica agar satu perubahan tidak dikirim be
 
 ## Internal status variable
 
-- `INTERNAL_STATUS_URL` hanya dipakai service `bot` untuk membaca ringkasan status monitor melalui jaringan internal Compose.
+- `INTERNAL_STATUS_URL` hanya dipakai service `bot` untuk membaca ringkasan status monitor. Di host lokal gunakan `http://127.0.0.1:3001/internal/status` jika monitor dijalankan pada port 3001; di Compose gunakan `http://monitor:3000/internal/status` karena `monitor` adalah nama service.
 - `INTERNAL_STATUS_TOKEN` wajib sama pada bot dan monitor, tetapi tidak boleh ditampilkan pada `/system` atau log.
 - File SQLite hanya dibuka oleh monitor. Bot tidak menggunakan `MONITOR_STATE_DB_PATH` untuk membaca database secara langsung.
 
@@ -116,7 +131,8 @@ Bot bersifat publik. Tidak ada `TELEGRAM_ALLOWED_CHAT_IDS` pada keputusan saat i
 - `TELEGRAM_OWNER_ID` berisi satu Telegram user ID utama;
 - `TELEGRAM_ADMIN_IDS` berisi daftar user ID admin yang dipisahkan koma;
 - otorisasi memakai `from.id`, bukan username;
-- `/system` hanya boleh diproses untuk owner/admin.
+- `/system`, `/notify`, dan `/notifyair` hanya boleh diproses untuk owner/admin;
+- bagian command owner/admin pada `/start` dan `/help` hanya ditampilkan jika `from.id` terotorisasi.
 
 ## Validasi startup
 

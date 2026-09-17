@@ -4,7 +4,7 @@ Status: keputusan diimplementasikan.
 
 ## Tujuan
 
-Bot Telegram bersifat publik dan menyediakan pemantauan satu lokasi: Angke Hulu. Pengguna umum dapat meminta data TMA, memeriksa respons bot, dan membaca bantuan. Owner/admin memiliki satu command tambahan untuk melihat informasi sistem dan bot.
+Bot Telegram bersifat publik dan menyediakan pemantauan satu lokasi: Angke Hulu. Pengguna umum dapat meminta data TMA, memeriksa respons bot, dan membaca bantuan. Owner/admin memiliki command tambahan untuk melihat informasi sistem dan mengirim test/informasi manual ke target monitor.
 
 Semua pesan yang dikirim bot menggunakan Telegram Rich Message. Tidak ada penggunaan `sendMessage` biasa atau inline keyboard terpisah untuk alur utama.
 
@@ -13,7 +13,7 @@ Semua pesan yang dikirim bot menggunakan Telegram Rich Message. Tidak ada penggu
 | Command | Akses | Fungsi |
 | --- | --- | --- |
 | `/air` | Publik | Menampilkan data TMA Angke Hulu dalam Rich Message. |
-| `/ping` | Publik | Menampilkan respons bot dan waktu proses dalam milidetik/detik. |
+| `/ping` | Publik | Menampilkan waktu respons request pengiriman ke Telegram dalam milidetik/detik. |
 | `/version`, `/ver`, `/versi` | Publik | Menampilkan versi bot. Ketiganya memiliki respons yang sama. |
 | `/start` | Publik | Menampilkan informasi awal bot dan bantuan singkat. |
 | `/help` | Publik | Menampilkan daftar command dan bantuan bot. |
@@ -23,8 +23,10 @@ Semua pesan yang dikirim bot menggunakan Telegram Rich Message. Tidak ada penggu
 | Command | Akses | Fungsi |
 | --- | --- | --- |
 | `/system` | Owner/admin | Menampilkan mode runtime, status cache, upstream, versi aplikasi/runtime, uptime, dan informasi operasional penting lainnya. |
+| `/notify <pesan>` | Owner/admin | Mengirim pesan Rich Message manual ke target group/thread monitor pada `MONITOR_TARGETS_JSON`. |
+| `/notifyair` | Owner/admin | Mengambil snapshot yang sama dengan `/air`, lalu mengirimkannya sebagai Rich Message ke target group/thread monitor. |
 
-Command admin tambahan seperti force refresh belum ditetapkan dan tidak boleh ditambahkan diam-diam.
+Command admin untuk mengubah konfigurasi atau force refresh belum ditetapkan dan tidak boleh ditambahkan diam-diam. `/notify` hanya mengirim pesan manual, sedangkan `/notifyair` membaca cache/sumber sesuai alur `/air`; keduanya tidak mengubah konfigurasi atau state worker. Ringkasan pengiriman terakhir tersedia di `/system` selama process bot belum restart.
 
 ## Tampilan `/air`
 
@@ -33,12 +35,12 @@ Struktur tampilan yang disepakati:
 ```text
 🌊 PEMANTAUAN TINGGI MUKA AIR (TMA)
 
-🌐 Sumber: [Posko Banjir DKI Jakarta](https://poskobanjir.dsdadki.web.id/xmldata.xml)
+🌐 Sumber: [Posko Banjir DKI Jakarta](https://poskobanjir.dsdadki.web.id/)
 
 📍 [P.S. Angke Hulu 1](https://www.google.com/maps?q=<latitude>,<longitude>)
 
     ├ 🕒 <tanggal pengamatan> WIB
-    ├ <ikon arah> Ketinggian: <TINGGI_AIR raw / 10> cm
+    ├ <ikon arah> · Ketinggian: `<TINGGI_AIR raw / 10> cm`
     └ 🟢 <STATUS_SIAGA>
 
 ▸ 📋 Keterangan & Legenda
@@ -65,17 +67,17 @@ Perbandingan dilakukan pada nilai sumber. Nilai tidak dibuat absolut, tidak diba
 
 ## `/ping`
 
-`/ping` mengukur waktu proses aplikasi, bukan waktu pesan terlihat di perangkat pengguna dan bukan end-to-end latency jaringan pengguna.
+`/ping` mengirim Rich Message PONG sementara, mengukur durasi request `sendRichMessage` sampai API Telegram mengembalikan pesan, lalu mengedit pesan tersebut dengan hasil pengukurannya. Jadi angka yang ditampilkan adalah waktu respons API Telegram dari sisi server bot, bukan waktu membangun payload, waktu pesan terlihat di perangkat pengguna, atau end-to-end latency jaringan pengguna.
 
 Contoh:
 
 ```text
 🏓 PONG
 
-└ ⏱️ Waktu proses bot: 12 ms (0,012 detik)
+└ ⏱️ Waktu respons: 12.00 ms (0.0120 detik)
 ```
 
-Pengukuran tidak perlu mengambil data air. Tujuannya adalah mengetahui apakah process bot merespons.
+Pengukuran tidak perlu mengambil data air. Sebelum hasil tersedia, pesan memakai placeholder `Waktu respons: mengukur…`. Jika pesan tidak dapat diedit setelah request pengiriman berhasil, bot tidak menampilkan angka `0` atau angka perkiraan; kegagalan edit cukup dicatat pada log JSON.
 
 ## `/version`, `/ver`, `/versi`
 
@@ -92,6 +94,8 @@ Hasanudin H Syafaat
 
 `@hasanudinhs` dan `banghasan.com` menjadi inline link. Button `💬 Grup Diskusi @botindonesia` membuka `https://t.me/botindonesia`.
 
+Daftar command owner/admin (`/system`, `/notify <pesan>`, dan `/notifyair`) hanya ditambahkan ke `/start` atau `/help` jika `from.id` pengguna adalah owner/admin. User publik tetap melihat daftar command publik saja.
+
 ## Summary yang dapat dibuka
 
 Bagian berikut berada dalam satu blok Rich Message yang collapsed secara default:
@@ -102,7 +106,7 @@ Berisi waktu pengambilan aplikasi dan tabel threshold siaga yang dibaca dari rec
 
 Format visual yang mengikuti web sumber:
 
-| Status | Batas TMA |
+| Status | Rentang TMA |
 | --- | --- |
 | 🔴 BAHAYA | > 300 cm |
 | 🟡 SIAGA | 250–300 cm |
@@ -110,6 +114,8 @@ Format visual yang mengikuti web sumber:
 | 🟢 Normal | < 150 cm |
 
 Legenda ditampilkan di bawah tabel: `Legenda: 📈 naik · 📉 turun · ➡️ tetap`.
+
+Jika data yang ditampilkan berasal dari cache lama, labelnya menjadi `📦 Data: cache (stale)` dan peringatan singkat tetap ditampilkan pada bagian utama.
 
 ## Tombol
 

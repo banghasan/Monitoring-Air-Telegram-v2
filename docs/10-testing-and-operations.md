@@ -36,7 +36,7 @@ Aturan detail tentang fixture, isolasi unit test, `bun test`, lint, type-check, 
 - Semua command mengirim Rich Message.
 - `📋 Keterangan & Legenda` berada dalam satu details collapsed.
 - Waktu pengambilan aplikasi berada di dalam details, bukan di data utama.
-- Threshold ditampilkan sebagai tabel Rich Message.
+- Threshold ditampilkan sebagai tabel Rich Message dengan kolom `Status` dan `Rentang TMA`.
 - Button refresh mencoba edit dahulu.
 - Jika edit gagal/tidak didukung, fallback mengirim pesan baru.
 - Nama stasiun menjadi inline link peta memakai koordinat record aktif jika tersedia.
@@ -44,9 +44,15 @@ Aturan detail tentang fixture, isolasi unit test, `bun test`, lint, type-check, 
 - Link sumber mengarah ke halaman utama Posko Banjir DKI Jakarta.
 - Waktu pengamatan dan waktu pengambilan memakai format monospace tanpa kata `pukul`.
 - Status utama hanya memakai emoji status, misalnya `🟢 Status : Normal`, tanpa emoji dekoratif tambahan.
-- `/ping` menampilkan durasi proses.
+- Cache stale diberi label `(stale)` dan peringatan singkat.
+- `/ping` menampilkan waktu respons request `sendRichMessage` ke Telegram, bukan durasi proses membangun payload.
 - `/version`, `/ver`, dan `/versi` menampilkan versi aplikasi.
 - `/start` dan `/help` menampilkan informasi pengembang serta button grup diskusi `@botindonesia`.
+- `/notify <pesan>` hanya dapat dijalankan owner/admin dan mengirim ke target pada `MONITOR_TARGETS_JSON` beserta thread ID-nya.
+- `/notifyair` hanya dapat dijalankan owner/admin dan mengirim snapshot Rich Message yang sama dengan `/air` ke target monitor.
+- User biasa tidak dapat memicu `/notify` atau `/notifyair`; keduanya tidak masuk menu command publik.
+- `/start` dan `/help` user biasa tidak menampilkan command admin, sedangkan owner/admin melihat bagian command internal.
+- `/system` menampilkan ringkasan hasil `/notify` atau `/notifyair` terakhir selama process bot aktif tanpa menyimpan isi pesannya.
 
 ## Monitoring worker
 
@@ -76,6 +82,8 @@ Aturan detail tentang fixture, isolasi unit test, `bun test`, lint, type-check, 
 
 - `/air`, `/ping`, `/start`, dan `/help` dapat digunakan publik.
 - `/system` ditolak untuk user non-admin.
+- `/notify` menolak user non-owner/admin dan tidak mengirim pesan ke target.
+- `/notifyair` menolak user non-owner/admin dan tidak mengirim pesan ke target.
 - Secret tidak muncul di response maupun log.
 
 ## Operasional

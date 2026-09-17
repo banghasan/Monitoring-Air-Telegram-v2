@@ -16,8 +16,10 @@ Struktur Rich Message mengikuti referensi lokal [Telegram Bot API](./telegram/ap
 Semua output bot menggunakan Rich Message:
 
 - `/air` memakai Rich Message;
-- `/ping` memakai Rich Message;
+- `/ping` memakai Rich Message dan mengukur waktu respons request Telegram;
 - `/version`, `/ver`, dan `/versi` memakai Rich Message;
+- `/notify <pesan>` memakai Rich Message ketika owner/admin mengirim informasi manual ke target monitor;
+- `/notifyair` memakai payload Rich Message yang sama dengan `/air` ketika owner/admin mengirim snapshot ke target monitor;
 - `/start` dan `/help` menyertakan informasi pengembang serta button Rich Message grup diskusi;
 - `/start` dan `/help` memakai Rich Message;
 - button diletakkan sebagai block/button Rich Message;
@@ -41,7 +43,9 @@ Susunan logis:
 
 `📋 Keterangan & Legenda` bukan pesan terpisah dan bukan button toggle manual. Keduanya menjadi satu summary/details block dari Rich Message agar pengguna dapat membuka informasi tambahan dalam satu tindakan. Waktu pengambilan aplikasi berada di dalam details agar tidak mengulang informasi waktu pengamatan pada bagian utama.
 
-Threshold ditampilkan menggunakan tabel dua kolom (`Status` dan `Batas TMA`) dengan nilai yang dibaca dari record aktif. Legenda arah ditampilkan sebagai paragraph setelah tabel.
+Threshold ditampilkan menggunakan tabel dua kolom (`Status` dan `Rentang TMA`) dengan nilai yang dibaca dari record aktif. Legenda arah ditampilkan sebagai paragraph setelah tabel tanpa emoji judul tambahan.
+
+Jika source belum diperbarui, label cache menggunakan penanda `(stale)` dan peringatan singkat tetap terlihat pada bagian utama.
 
 ## Button refresh
 
@@ -61,3 +65,17 @@ Adapter memanggil `bot.api.editMessageText(chatId, messageId, richMessage)`. Gra
 URL sumber dan URL peta disajikan sebagai `RichTextUrl` pada teks yang relevan. URL tidak dicetak sebagai teks mentah dan tidak diduplikasi menjadi button peta. Jika koordinat tidak valid, nama stasiun tetap ditampilkan tanpa link.
 
 Link sumber mengarah ke halaman utama Posko Banjir DKI Jakarta (`https://poskobanjir.dsdadki.web.id/`), bukan endpoint XML. Nilai tanggal dan waktu menggunakan `RichTextCode`/monospace dan format `17 September 2026 18.35.00 WIB` tanpa kata `pukul`.
+
+## Pengukuran `/ping`
+
+`/ping` mengirim placeholder PONG terlebih dahulu. Timer dimulai tepat sebelum adapter memanggil `sendRichMessage` dan berhenti ketika API Telegram mengembalikan objek pesan. Setelah itu adapter mengedit `message_id` yang dikembalikan untuk mengganti placeholder dengan waktu respons dalam milidetik dan detik.
+
+Pengukuran ini tidak mencakup waktu render pada aplikasi Telegram atau latency lengkap dari perangkat pengguna ke bot. Jika edit hasil pengukuran gagal, bot mempertahankan placeholder dan menulis kegagalan ke log JSON.
+
+Nilai pengukuran `/ping` (`12.34 ms (0.0123 detik)`) dikirim sebagai `RichTextCode`/monospace, sedangkan label `Waktu respons` tetap berupa teks biasa.
+
+## Pengiriman manual ke monitor
+
+`/notify <pesan>` membuat pesan manual yang mencantumkan pengirim dan waktu kirim. `/notifyair` mengambil data melalui cache yang sama dengan `/air`, lalu mengirim payload hasil `/air` tanpa mengubah isinya. Keduanya mengirim ke target yang dikonfigurasi pada `MONITOR_TARGETS_JSON`, termasuk `thread_id`, dan memberikan konfirmasi Rich Message ke chat asal.
+
+Command manual hanya diproses untuk owner/admin. Keduanya tidak dimasukkan ke menu command publik Telegram dan tidak ditampilkan pada `/start` atau `/help` user biasa; bagian command internal hanya terlihat oleh owner/admin.
