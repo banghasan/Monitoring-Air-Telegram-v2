@@ -65,6 +65,36 @@ Status: **disetujui untuk MVP**.
 - Changelog singkat direkomendasikan ketika mulai ada release publik.
 - Rollback image harus dapat dilakukan dengan tag versi sebelumnya.
 
+## Workflow pengerjaan
+
+Pengerjaan MVP dilakukan secara berurutan oleh satu agent/alur kerja. Sub-agent atau parallel coding tidak digunakan pada tahap ini.
+
+Urutan kerja yang disepakati:
+
+1. finalisasi kontrak domain dan configuration;
+2. implementasi source data dan cache;
+3. implementasi SQLite state dan monitoring worker;
+4. implementasi adapter Telegram, command, dan Rich Message;
+5. implementasi Elysia health/internal status endpoint;
+6. implementasi Docker Compose, version script, dan quality gate;
+7. unit test, integration test, review, lalu build image.
+
+Perubahan tetap dipisah berdasarkan domain agar mudah dibaca, tetapi integrasi dilakukan satu per satu untuk menghindari konflik pada `package.json`, konfigurasi, entrypoint, dan dependency antar-layer.
+
+## Mode pengerjaan berkelanjutan
+
+Setelah user memberikan izin mulai coding, agent melanjutkan issue yang sudah direncanakan satu per satu sampai seluruh issue selesai. Agent tidak meminta konfirmasi untuk berpindah ke issue berikutnya selama pekerjaan masih berada dalam scope dan keputusan yang sudah disetujui.
+
+Agent hanya berhenti dan meminta arahan jika:
+
+- ada keputusan produk baru yang dapat mengubah arsitektur atau perilaku pengguna;
+- dependency, credential, akses repository, atau resource eksternal yang wajib belum tersedia;
+- terdapat konflik dengan perubahan user atau kondisi workspace yang tidak aman untuk dilanjutkan;
+- diperlukan tindakan destruktif atau perubahan eksternal yang belum diizinkan;
+- issue tidak dapat diselesaikan setelah alternatif aman dalam scope sudah dicoba.
+
+Setiap issue yang selesai harus memiliki implementasi, test yang relevan, dan dokumentasi status. Setelah itu agent langsung melanjutkan issue berikutnya dan memberikan ringkasan progres berkala.
+
 ## Testing
 
 - Default test tidak mengakses internet dan Telegram.
