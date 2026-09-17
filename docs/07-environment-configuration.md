@@ -152,5 +152,7 @@ Saat startup, aplikasi perlu menolak konfigurasi yang:
 - konfigurasi retry memiliki jumlah attempt/backoff yang tidak konsisten;
 - `PUBLIC_COMMAND_COOLDOWN_SECONDS` bukan angka duration yang valid;
 - status endpoint internal aktif tetapi URL/token tidak lengkap;
-- role `monitor` tidak memiliki path state SQLite yang dapat ditulis;
+- role `monitor` tidak memiliki path state SQLite yang dapat dibuka dan ditulis;
 - webhook configuration tidak lengkap jika `TELEGRAM_WEBHOOK_ENABLED=true`.
+
+Saat role `monitor` mulai, aplikasi membuka database SQLite, membuat parent directory jika diperlukan, menjalankan migration, dan menyiapkan WAL. Rangkaian ini sekaligus memvalidasi kemampuan baca/tulis path state. Jika gagal, aplikasi menulis log JSON event `state.database.init_failed`, menetapkan exit code gagal, dan tidak menjalankan HTTP server maupun scheduler monitoring.

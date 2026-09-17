@@ -8,7 +8,11 @@ import { MonitorService } from "./monitor-service.js";
 import { TelegramNotificationSender } from "./telegram-notification-sender.js";
 
 export async function startMonitor(config: AppConfig, logger: StructuredLogger): Promise<void> {
-  const repository = new SqliteStateRepository(config.monitor.stateDbPath);
+  const repository = openMonitorStateRepository(config.monitor.stateDbPath, logger);
+  if (!repository) {
+    process.exitCode = 1;
+    return;
+  }
   const source = new XmlWaterSource({
     sourceUrl: config.water.sourceUrl,
     stationQuery: config.water.stationQuery,
@@ -45,5 +49,22 @@ export async function startMonitor(config: AppConfig, logger: StructuredLogger):
     process.once("SIGINT", shutdown);
   } else {
     logger.warn("monitor.disabled", "monitor is disabled by configuration");
+  }
+}
+
+export function openMonitorStateRepository(
+  stateDbPath: string,
+  logger: StructuredLogger,
+): SqliteStateRepository | undefined {
+  try {
+    return new SqliteStateRepository(stateDbPath);
+  } catch (error) {
+    logger.error(
+      "state.database.init_failed",
+      "monitor state database could not be opened for read/write",
+      error,
+      { state_db_path: stateDbPath },
+    );
+    return undefined;
   }
 }

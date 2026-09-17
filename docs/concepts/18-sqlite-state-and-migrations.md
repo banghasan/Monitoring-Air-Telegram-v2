@@ -39,6 +39,8 @@ Saat development di host, path relatif tersebut menghasilkan `data/state/monitor
 
 Repository membuat parent directory jika belum ada. File SQLite lokal diabaikan Git; database production tetap disimpan pada named volume dan tidak dimasukkan ke repository.
 
+Validasi path dilakukan melalui inisialisasi database yang sebenarnya: open database, migration, dan konfigurasi WAL. Jika directory tidak dapat dibuat atau database tidak dapat dibaca/ditulis, monitor mencatat event JSON `state.database.init_failed` dengan error yang sudah disanitasi, menetapkan exit code non-zero, lalu tidak memulai scheduler. Ini membuat masalah permission atau mount terlihat langsung pada `docker logs` dan memicu restart policy Docker.
+
 ## Keputusan akses lintas container
 
 Service `monitor` menjadi pemilik database dan satu-satunya service yang membuka/menulis state. Service `bot` tidak membuka file SQLite yang sama secara langsung.

@@ -87,6 +87,8 @@ Kedua service membaca `env_file` yang sama, tetapi `APP_ROLE` dan lifecycle proc
 - `/ready` menunjukkan konfigurasi minimum valid dan dependency internal siap; status upstream yang sedang gagal dicatat sebagai kondisi monitoring, bukan alasan mengirim broadcast error.
 - Compose memakai `restart: unless-stopped` agar process yang berhenti dapat dijalankan kembali oleh Docker.
 
+Saat monitor tidak dapat membuka atau menulis `/data/state/monitor.sqlite`, process menulis event JSON `state.database.init_failed` lalu keluar. Periksa dengan `docker compose logs monitor`; restart policy akan mencoba menjalankan ulang setelah masalah mount atau permission diperbaiki.
+
 Health endpoint bukan pengganti `/system`. Endpoint tersebut dipakai Docker/orchestrator, sedangkan `/system` merangkum kondisi operasional untuk owner/admin.
 
 ## Rotasi log Docker
