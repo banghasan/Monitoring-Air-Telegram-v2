@@ -48,7 +48,7 @@ Aturan detail tentang fixture, isolasi unit test, `bun test`, lint, type-check, 
 - `/ping` menampilkan waktu respons request `sendRichMessage` ke Telegram, bukan durasi proses membangun payload.
 - `/version`, `/ver`, dan `/versi` menampilkan versi aplikasi.
 - `/start` dan `/help` menampilkan informasi pengembang serta button grup diskusi `@botindonesia`.
-- `/notify <pesan>` hanya dapat dijalankan owner/admin dan mengirim ke target pada `MONITOR_TARGETS_JSON` beserta thread ID-nya.
+- `/notify <pesan>` hanya dapat dijalankan owner/admin dan mengirim ke semua target pada `MONITOR_TARGETS_JSON`; thread ID hanya diteruskan untuk target yang mengaturnya.
 - `/notifyair` hanya dapat dijalankan owner/admin dan mengirim snapshot Rich Message yang sama dengan `/air` ke target monitor.
 - User biasa tidak dapat memicu `/notify` atau `/notifyair`; keduanya tidak masuk menu command publik.
 - `/start` dan `/help` user biasa tidak menampilkan command admin, sedangkan owner/admin melihat bagian command internal.
@@ -73,10 +73,11 @@ Aturan detail tentang fixture, isolasi unit test, `bun test`, lint, type-check, 
 ## Target Telegram
 
 - Group dengan topic dapat memakai `thread_id`.
-- MVP saat ini hanya menerima satu group forum dengan `thread_id` positif.
-- Group tanpa topic dan channel belum menjadi target deployment MVP.
+- Satu atau lebih target group/channel dapat dikonfigurasi.
+- Group dengan topic memakai `thread_id` positif.
+- Channel dan group tanpa topic menghilangkan `thread_id`.
 - Target invalid ditolak saat startup dan tidak boleh menjadi tujuan pengiriman.
-- Model internal sudah berupa array agar multi-target dapat ditambahkan setelah validasi tipe target.
+- Setiap target diproses dan dicatat secara independen.
 
 ## Akses
 

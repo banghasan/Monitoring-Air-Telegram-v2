@@ -20,7 +20,7 @@ Tag diisi dengan tag yang dipublish oleh GitHub Action manual, misalnya `latest`
 - Image sudah dibuild dan dipush oleh workflow Docker manual.
 - Host sudah login ke GHCR jika image private.
 - File `.env` production tersedia di host dan tidak di-commit.
-- `MONITOR_TARGETS_JSON` berisi satu group forum dan `thread_id` yang sudah diverifikasi.
+- `MONITOR_TARGETS_JSON` berisi minimal satu target yang sudah diverifikasi; group forum memakai `thread_id`, sedangkan channel menghilangkan field tersebut.
 - `INTERNAL_STATUS_TOKEN` menggunakan secret acak yang sama untuk `bot` dan `monitor`.
 
 Login GHCR jika diperlukan:
@@ -110,7 +110,7 @@ WATER_STATION_DISPLAY_NAME=P.S. Angke Hulu (Baru)
 
 MONITOR_INTERVAL_SECONDS=60
 MONITOR_DRY_RUN=false
-MONITOR_TARGETS_JSON=[{"chat_id":"-1001234567890","thread_id":42,"label":"Operasional"}]
+MONITOR_TARGETS_JSON='[{"chat_id":"-1004431127445","thread_id":5,"label":"Monitoring"},{"chat_id":"-1003861660503","label":"Channel"}]'
 INTERNAL_STATUS_TOKEN=replace-with-random-secret
 ```
 

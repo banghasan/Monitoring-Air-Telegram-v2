@@ -1,10 +1,16 @@
+import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { MonitorService } from "../../src/app/monitoring/monitor-service.js";
 import { type AppConfig, parseConfig } from "../../src/config/config.js";
 import type { NotificationEvent } from "../../src/domain/monitoring/types.js";
 import type { WaterReading } from "../../src/domain/water/types.js";
 import { StructuredLogger } from "../../src/infrastructure/logging/structured-logger.js";
-import { SqliteStateRepository } from "../../src/infrastructure/state/sqlite-state-repository.js";
+import {
+  SqliteStateRepository,
+  targetKeyFor,
+} from "../../src/infrastructure/state/sqlite-state-repository.js";
 
 function makeReading(status: string, heightRaw: number): WaterReading {
   return {
@@ -28,7 +34,11 @@ function makeReading(status: string, heightRaw: number): WaterReading {
 }
 
 function config(): AppConfig {
-  return parseConfig({
+  return parseConfig(configEnvironment());
+}
+
+function configEnvironment(): Record<string, string> {
+  return {
     TELEGRAM_BOT_TOKEN: "test-token",
     APP_ROLE: "monitor",
     MONITOR_TARGETS_JSON: '[{"chat_id":"-100123","thread_id":42,"label":"Test"}]',
@@ -36,7 +46,7 @@ function config(): AppConfig {
     INTERNAL_STATUS_TOKEN: "secret",
     TELEGRAM_SEND_MAX_ATTEMPTS: "1",
     UPSTREAM_MAX_ATTEMPTS: "1",
-  });
+  };
 }
 
 test("repository menyimpan baseline, event, dan delivery state", () => {
@@ -49,6 +59,111 @@ test("repository menyimpan baseline, event, dan delivery state", () => {
   });
   expect(repository.getSnapshot("angke-hulu")?.reading.heightRaw).toBe(-440);
   repository.close();
+});
+
+test("repository menyimpan delivery group dan channel tanpa thread", () => {
+  const repository = new SqliteStateRepository(":memory:");
+  const reading = makeReading("Siaga 3", -420);
+  const event = {
+    eventId: "event-multi-target",
+    stationKey: "angke-hulu",
+    previousStatusRaw: "Status : Normal",
+    currentStatusRaw: "Status : Siaga 3",
+    payload: reading,
+    createdAt: "2026-09-17T08:10:00.000Z",
+  };
+  repository.saveEvent(
+    event,
+    [
+      { chatId: -100123, threadId: 42, label: "Monitoring" },
+      { chatId: -100456, label: "Channel" },
+    ],
+    {
+      stationKey: "angke-hulu",
+      reading,
+      lastEventId: event.eventId,
+      updatedAt: event.createdAt,
+      lastSuccessAt: event.createdAt,
+    },
+  );
+
+  const deliveries = repository.listPendingDeliveries(new Date("2026-09-17T08:11:00.000Z"));
+  expect(deliveries).toHaveLength(2);
+  expect(deliveries.map((delivery) => delivery.target.threadId)).toEqual([42, undefined]);
+  expect(deliveries[0]?.targetKey).toBe("-100123:42");
+  expect(deliveries[1]?.targetKey).toBe("-100456:no-thread");
+  expect(targetKeyFor({ chatId: -100456, label: "Channel" })).toBe("-100456:no-thread");
+  repository.close();
+});
+
+test("migration mempertahankan delivery lama dan membuka thread kosong untuk channel", () => {
+  const directory = mkdtempSync(join(process.cwd(), ".tmp-monitor-migration-"));
+  const databasePath = join(directory, "monitor.sqlite");
+  const reading = makeReading("Siaga 3", -420);
+  try {
+    const legacy = new Database(databasePath, { create: true, strict: true });
+    legacy.exec(readFileSync(resolve(process.cwd(), "migrations/001_initial_state.sql"), "utf8"));
+    legacy.exec(
+      "CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL);",
+    );
+    legacy
+      .query("INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)")
+      .run(1, "2026-09-17T08:00:00.000Z");
+    legacy
+      .query(
+        `INSERT INTO monitor_event
+          (event_id, station_key, previous_status_raw, current_status_raw, payload_json, created_at)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        "legacy-event",
+        "angke-hulu",
+        "Status : Normal",
+        "Status : Siaga 3",
+        JSON.stringify(reading),
+        "2026-09-17T08:00:00.000Z",
+      );
+    legacy
+      .query(
+        `INSERT INTO notification_delivery
+          (event_id, target_key, target_label, chat_id, thread_id, state, attempt_count)
+         VALUES (?, ?, ?, ?, ?, 'pending', 0)`,
+      )
+      .run("legacy-event", "-100123:42", "Legacy", "-100123", 42);
+    legacy.close();
+
+    const repository = new SqliteStateRepository(databasePath);
+    repository.saveEvent(
+      {
+        eventId: "channel-event",
+        stationKey: "angke-hulu",
+        previousStatusRaw: "Status : Siaga 3",
+        currentStatusRaw: "Status : Siaga 2",
+        payload: reading,
+        createdAt: "2026-09-17T08:01:00.000Z",
+      },
+      [{ chatId: -100456, label: "Channel" }],
+      {
+        stationKey: "angke-hulu",
+        reading,
+        lastEventId: "channel-event",
+        updatedAt: "2026-09-17T08:01:00.000Z",
+        lastSuccessAt: "2026-09-17T08:01:00.000Z",
+      },
+    );
+
+    const deliveries = repository.listPendingDeliveries(new Date("2026-09-17T08:02:00.000Z"));
+    expect(deliveries).toHaveLength(2);
+    expect(deliveries.find((delivery) => delivery.target.label === "Legacy")?.target.threadId).toBe(
+      42,
+    );
+    expect(
+      deliveries.find((delivery) => delivery.target.label === "Channel")?.target.threadId,
+    ).toBeUndefined();
+    repository.close();
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
 });
 
 test("monitor hanya mengirim ketika status berubah dan tidak mengirim baseline", async () => {
@@ -77,6 +192,39 @@ test("monitor hanya mengirim ketika status berubah dan tidak mengirim baseline",
   expect(sent[0]?.previousStatusRaw).toBe("Status : Normal");
   expect(sent[0]?.currentStatusRaw).toBe("Status : Siaga 3");
   expect(repository.status().pendingDeliveries).toBe(0);
+  repository.close();
+});
+
+test("monitor mengirim perubahan ke semua target secara independen", async () => {
+  const repository = new SqliteStateRepository(":memory:");
+  const readings = [makeReading("Normal", -440), makeReading("Siaga 3", -420)];
+  const source = { fetchReading: async () => readings.shift() ?? makeReading("Siaga 3", -420) };
+  const sent: AppConfig["monitor"]["targets"] = [];
+  const sender = {
+    send: async (target: AppConfig["monitor"]["targets"][number]) => {
+      sent.push(target);
+    },
+  };
+  const multiTargetConfig = parseConfig({
+    ...configEnvironment(),
+    MONITOR_TARGETS_JSON:
+      '[{"chat_id":"-100123","thread_id":42,"label":"Monitoring"},{"chat_id":"-100456","label":"Channel"}]',
+  });
+  const logger = new StructuredLogger("test", () => undefined);
+  const service = new MonitorService({
+    config: multiTargetConfig,
+    source,
+    repository,
+    sender,
+    logger,
+  });
+
+  await service.runOnce();
+  await service.runOnce();
+
+  expect(sent).toHaveLength(2);
+  expect(sent.map((target) => target.chatId)).toEqual([-100123, -100456]);
+  expect(sent.map((target) => target.threadId)).toEqual([42, undefined]);
   repository.close();
 });
 

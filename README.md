@@ -8,7 +8,7 @@ Bot Telegram publik untuk memantau tinggi muka air `Angke Hulu` dari XML Posko B
 - `/system`, `/notify <pesan>`, dan `/notifyair` untuk owner/admin.
 - Telegram Rich Message dengan details collapsed, button refresh, dan link peta pada nama station.
 - Cache memory dengan TTL 60 detik dan stale fallback 15 menit.
-- Notifikasi ke group forum/thread ketika `STATUS_SIAGA` berubah.
+- Notifikasi ke banyak target group/channel ketika `STATUS_SIAGA` berubah; `thread_id` opsional untuk topic group.
 - Worker monitoring terpisah dengan state SQLite persisten.
 - Polling sebagai mode awal; webhook tersedia sebagai konfigurasi alternatif.
 - JSON log ke console untuk `docker logs`.

@@ -55,7 +55,7 @@ Informasi yang tidak boleh ditampilkan:
 
 ## `/notify <pesan>`
 
-Command ini hanya diproses jika `from.id` sesuai `TELEGRAM_OWNER_ID` atau salah satu ID pada `TELEGRAM_ADMIN_IDS`. Pesan dikirim sebagai Rich Message ke setiap target yang ada pada `MONITOR_TARGETS_JSON`, menggunakan `chat_id` dan `thread_id` target tersebut.
+Command ini hanya diproses jika `from.id` sesuai `TELEGRAM_OWNER_ID` atau salah satu ID pada `TELEGRAM_ADMIN_IDS`. Pesan dikirim sebagai Rich Message ke setiap target yang ada pada `MONITOR_TARGETS_JSON`, menggunakan `chat_id` dan `thread_id` jika target memilikinya.
 
 Contoh:
 

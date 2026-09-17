@@ -69,7 +69,7 @@ Service `monitor` memakai image aplikasi yang sama, tetapi entrypoint/role berbe
 - mengambil XML sesuai `MONITOR_INTERVAL_SECONDS`;
 - membandingkan snapshot sekarang dengan state terakhir;
 - mengirim Rich Message jika `STATUS_SIAGA` berubah;
-- mengirim ke semua target pada `MONITOR_TARGETS_JSON`;
+- mengirim ke semua target pada `MONITOR_TARGETS_JSON`; group forum dapat memakai topic, sedangkan channel tidak mengirim parameter thread;
 - menyimpan state minimal agar restart tidak otomatis menganggap data lama sebagai perubahan baru.
 
 Bot dan worker menulis log terstruktur ke console. Docker Compose tidak perlu menyimpan file log di dalam container; pengelolaan log dilakukan dari stdout/stderr melalui Docker logging driver atau platform deployment.

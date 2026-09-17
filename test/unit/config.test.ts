@@ -16,10 +16,39 @@ test("config memetakan target group forum dan default interval", () => {
   expect(config.monitor.targets[0]?.threadId).toBe(42);
 });
 
-test("config menolak monitor production tanpa tepat satu target", () => {
+test("config menerima banyak target dan channel tanpa thread", () => {
+  const config = parseConfig({
+    ...base,
+    MONITOR_TARGETS_JSON:
+      '[{"chat_id":"-100123","thread_id":42,"label":"Monitoring"},{"chat_id":"-100456","label":"Channel"}]',
+  });
+
+  expect(config.monitor.targets).toHaveLength(2);
+  expect(config.monitor.targets[0]).toEqual({
+    chatId: -100123,
+    threadId: 42,
+    label: "Monitoring",
+  });
+  expect(config.monitor.targets[1]).toEqual({
+    chatId: -100456,
+    threadId: undefined,
+    label: "Channel",
+  });
+});
+
+test("config menolak monitor production tanpa target", () => {
   expect(() => parseConfig({ TELEGRAM_BOT_TOKEN: "test-token", APP_ROLE: "monitor" })).toThrow(
     ConfigurationError,
   );
+});
+
+test("config menolak thread_id nol atau negatif", () => {
+  expect(() =>
+    parseConfig({
+      ...base,
+      MONITOR_TARGETS_JSON: '[{"chat_id":"-100123","thread_id":0,"label":"Invalid"}]',
+    }),
+  ).toThrow("thread_id harus berupa bilangan bulat positif jika diisi");
 });
 
 test("config menerima role bot tanpa target dan webhook menuntut URL serta secret", () => {

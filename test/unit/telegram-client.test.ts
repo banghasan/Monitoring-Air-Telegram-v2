@@ -18,7 +18,9 @@ test("Telegram client meneruskan thread_id pada sendRichMessage dan mengedit Ric
   const client = new TelegramRichClient("test-token", { bot: fakeBot });
   const message = { blocks: [{ type: "paragraph" as const, text: "test" }] };
   await client.send({ chatId: -100123, threadId: 42, label: "test" }, message);
+  await client.send({ chatId: -100456, label: "channel" }, message);
   await client.edit({ chatId: -100123, messageId: 7 }, message);
   expect(calls[0]).toEqual([-100123, message, { message_thread_id: 42 }]);
-  expect(calls[1]).toEqual([-100123, 7, message]);
+  expect(calls[1]).toEqual([-100456, message, {}]);
+  expect(calls[2]).toEqual([-100123, 7, message]);
 });

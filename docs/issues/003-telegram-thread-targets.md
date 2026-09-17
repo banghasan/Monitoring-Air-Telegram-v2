@@ -15,14 +15,16 @@ Bagaimana parameter thread/topic dipetakan untuk group forum dan channel berdasa
 
 ## Keputusan dan implementasi
 
-MVP memakai satu group forum dengan `chat_id` dan `thread_id` wajib. Model konfigurasi tetap berupa array agar multi-target dapat ditambahkan kemudian. Adapter Telegram harus memvalidasi tipe target dan mengirim field thread sesuai method Rich Message yang benar.
+MVP sekarang mendukung satu atau lebih target berupa group forum, channel, atau chat tanpa topic. `thread_id` bersifat opsional: group forum dapat mengisinya dengan bilangan bulat positif, sedangkan channel menghilangkan field tersebut. Adapter Telegram hanya mengirim field thread jika nilainya tersedia.
 
 ## Validasi
 
 - `sendRichMessage` pada referensi lokal memakai field `message_thread_id`;
-- konfigurasi internal memakai `thread_id` dan adapter memetakannya ke field API tersebut;
-- unit test adapter memastikan `{ chatId, threadId }` menjadi `sendRichMessage(chatId, richMessage, { message_thread_id: threadId })`;
-- konfigurasi production monitor menolak jumlah target selain satu pada MVP, tetapi state delivery disimpan per target untuk perluasan berikutnya;
+- konfigurasi internal memakai `thread_id` opsional dan adapter memetakannya ke `message_thread_id` hanya jika ada;
+- unit test adapter memastikan target group mengirim `{ message_thread_id: threadId }` dan target tanpa thread mengirim `{}`;
+- konfigurasi production monitor membutuhkan minimal satu target, dan tidak membatasi jumlah target;
+- state SQLite menyimpan delivery per target, termasuk channel tanpa thread;
+- migration `002_nullable_thread_id.sql` mempertahankan delivery lama sekaligus mengizinkan thread kosong;
 - kegagalan delivery dicatat per target dan tidak menjadi broadcast error.
 
-Validasi permission aktual pada group/forum tetap harus dilakukan operator saat deployment karena tidak dapat diuji tanpa credential dan target Telegram nyata.
+Validasi permission aktual pada group/channel/forum tetap harus dilakukan operator saat deployment karena tidak dapat diuji tanpa credential dan target Telegram nyata.

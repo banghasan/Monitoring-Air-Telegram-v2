@@ -72,7 +72,7 @@ interface DeliveryRow extends EventRow {
   target_key: string;
   target_label: string;
   chat_id: string;
-  thread_id: number;
+  thread_id: number | null;
   state: "pending" | "failed";
   attempt_count: number;
   next_retry_at: string | null;
@@ -164,7 +164,13 @@ export class SqliteStateRepository {
             (event_id, target_key, target_label, chat_id, thread_id, state, attempt_count)
            VALUES (?, ?, ?, ?, ?, 'pending', 0)`,
           )
-          .run(event.eventId, targetKey, target.label, String(target.chatId), target.threadId);
+          .run(
+            event.eventId,
+            targetKey,
+            target.label,
+            String(target.chatId),
+            target.threadId ?? null,
+          );
       }
       this.db
         .query(
@@ -214,7 +220,7 @@ export class SqliteStateRepository {
       event: eventFromRow(row),
       target: {
         chatId: /^-?\d+$/.test(row.chat_id) ? Number(row.chat_id) : row.chat_id,
-        threadId: row.thread_id,
+        threadId: row.thread_id ?? undefined,
         label: row.target_label,
       },
       targetKey: row.target_key,
@@ -304,7 +310,7 @@ export class SqliteStateRepository {
     this.db.exec(
       "CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL);",
     );
-    const files = ["001_initial_state.sql"];
+    const files = ["001_initial_state.sql", "002_nullable_thread_id.sql"];
     for (const file of files) {
       const version = Number(file.slice(0, 3));
       const alreadyApplied = this.db
@@ -348,5 +354,5 @@ function eventFromRow(row: EventRow): PersistedEvent {
 }
 
 export function targetKeyFor(target: NotificationTarget): string {
-  return `${String(target.chatId)}:${target.threadId}`;
+  return `${String(target.chatId)}:${target.threadId ?? "no-thread"}`;
 }

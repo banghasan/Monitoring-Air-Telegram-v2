@@ -21,9 +21,11 @@ export class TelegramRichClient {
   }
 
   async send(target: NotificationTarget, message: InputRichMessage): Promise<void> {
-    await this.bot.api.sendRichMessage(target.chatId, message, {
-      message_thread_id: target.threadId,
-    });
+    await this.bot.api.sendRichMessage(
+      target.chatId,
+      message,
+      target.threadId === undefined ? {} : { message_thread_id: target.threadId },
+    );
   }
 
   async sendToChat(

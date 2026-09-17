@@ -6,7 +6,7 @@ export type TelegramChatId = number | string;
 
 export interface NotificationTarget {
   chatId: TelegramChatId;
-  threadId: number;
+  threadId?: number;
   label: string;
 }
 
@@ -194,15 +194,21 @@ function parseTargets(environment: Environment): NotificationTarget[] {
       throw new ConfigurationError(`target ke-${index + 1} tidak valid`);
     }
     const target = item as Record<string, unknown>;
-    const threadId = target.thread_id;
-    if (!Number.isSafeInteger(threadId) || Number(threadId) <= 0) {
-      throw new ConfigurationError(`target ke-${index + 1} wajib memiliki thread_id positif`);
+    const rawThreadId = target.thread_id;
+    let threadId: number | undefined;
+    if (rawThreadId !== undefined && rawThreadId !== null) {
+      if (!Number.isSafeInteger(rawThreadId) || Number(rawThreadId) <= 0) {
+        throw new ConfigurationError(
+          `target ke-${index + 1} thread_id harus berupa bilangan bulat positif jika diisi`,
+        );
+      }
+      threadId = Number(rawThreadId);
     }
     const label =
       typeof target.label === "string" && target.label.trim()
         ? target.label.trim()
         : `target-${index + 1}`;
-    return { chatId: parseChatId(target.chat_id), threadId: Number(threadId), label };
+    return { chatId: parseChatId(target.chat_id), threadId, label };
   });
 }
 
@@ -211,9 +217,9 @@ function validateCrossFieldRules(config: AppConfig): void {
     config.monitor.enabled &&
     config.app.role === "monitor" &&
     !config.monitor.dryRun &&
-    config.monitor.targets.length !== 1
+    config.monitor.targets.length === 0
   ) {
-    throw new ConfigurationError("role monitor membutuhkan tepat satu target Telegram pada MVP");
+    throw new ConfigurationError("role monitor membutuhkan minimal satu target Telegram");
   }
   if (
     config.telegram.mode === "webhook" &&

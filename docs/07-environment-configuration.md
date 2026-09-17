@@ -89,7 +89,7 @@ Service `bot` tidak membuka database ini. Hanya service `monitor` yang memakai `
 - `MONITOR_ENABLED` mengaktifkan worker monitoring.
 - `MONITOR_INTERVAL_SECONDS` mengatur interval pemeriksaan XML; default awal 60 detik.
 - `MONITOR_DRY_RUN=true` menjalankan fetch, parsing, compare, dan logging tanpa mengirim request Telegram. State baseline tetap diperbarui agar dry-run tidak menghasilkan event yang sama berulang setiap siklus.
-- `MONITOR_TARGETS_JSON` untuk MVP berisi tepat satu group forum beserta `thread_id`.
+- `MONITOR_TARGETS_JSON` berisi satu atau lebih target group/channel. Target group forum dapat memakai `thread_id` positif; channel atau chat tanpa topic menghilangkan field tersebut.
 - `MONITOR_STATE_DB_PATH` menunjuk database SQLite worker; gunakan path lokal saat development dan `/data/state/monitor.sqlite` saat service Compose.
 - `UPSTREAM_MAX_ATTEMPTS` mengatur jumlah percobaan fetch dalam satu siklus; default 3.
 - `UPSTREAM_RETRY_BACKOFF_SECONDS` mengatur jeda retry upstream, misalnya `5,15` detik.
@@ -105,12 +105,16 @@ Contoh target:
   {
     "chat_id": "-1001234567890",
     "thread_id": 42,
-    "label": "Operasional"
+    "label": "Monitoring"
+  },
+  {
+    "chat_id": "-1003861660503",
+    "label": "Channel"
   }
 ]
 ```
 
-`thread_id` diwajibkan untuk target MVP. Konfigurasi multi-target dan channel menjadi perluasan berikutnya. Field internal ini nantinya dipetakan ke parameter thread/message Telegram sesuai schema pada [`telegram/api.md`](./telegram/api.md).
+`thread_id` opsional. Jika ada, nilainya harus bilangan bulat positif dan dipetakan ke `message_thread_id`; jika dihilangkan, adapter mengirim ke chat tanpa parameter thread. `MONITOR_TARGETS_JSON` diproses per target sehingga satu target gagal tidak menghentikan target lainnya.
 
 Worker awal dijalankan sebagai satu replica agar satu perubahan tidak dikirim berulang. Jika worker dibuat lebih dari satu replica, diperlukan distributed lock atau mekanisme deduplication bersama.
 
@@ -120,7 +124,7 @@ Worker awal dijalankan sebagai satu replica agar satu perubahan tidak dikirim be
 
 ## Internal status variable
 
-- `INTERNAL_STATUS_URL` hanya dipakai service `bot` untuk membaca ringkasan status monitor. Di host lokal gunakan `http://127.0.0.1:3001/internal/status` jika monitor dijalankan pada port 3001; di Compose gunakan `http://monitor:3000/internal/status` karena `monitor` adalah nama service.
+- `INTERNAL_STATUS_URL` hanya dipakai service `bot` untuk membaca ringkasan status monitor. Di host lokal gunakan `http://127.0.0.1:3001/internal/status` jika monitor dijalankan pada port 3001; di Compose gunakan hostname sesuai nama service, misalnya `http://monitor:3000/internal/status` pada Compose contoh.
 - `INTERNAL_STATUS_TOKEN` wajib sama pada bot dan monitor, tetapi tidak boleh ditampilkan pada `/system` atau log.
 - File SQLite hanya dibuka oleh monitor. Bot tidak menggunakan `MONITOR_STATE_DB_PATH` untuk membaca database secara langsung.
 
@@ -147,8 +151,9 @@ Saat startup, aplikasi perlu menolak konfigurasi yang:
 - `MONITOR_INTERVAL_SECONDS` bukan integer positif jika monitoring diaktifkan;
 - `MONITOR_DRY_RUN` bukan boolean yang valid;
 - `MONITOR_TARGETS_JSON` bukan JSON array yang valid;
-- target tidak memiliki `chat_id` atau `thread_id` pada konfigurasi MVP;
-- monitoring aktif dan bukan dry-run tetapi jumlah target bukan tepat satu;
+- target tidak memiliki `chat_id`;
+- `thread_id` target diisi tetapi bukan bilangan bulat positif;
+- monitoring aktif dan bukan dry-run tetapi tidak memiliki target;
 - konfigurasi retry memiliki jumlah attempt/backoff yang tidak konsisten;
 - `PUBLIC_COMMAND_COOLDOWN_SECONDS` bukan angka duration yang valid;
 - status endpoint internal aktif tetapi URL/token tidak lengkap;

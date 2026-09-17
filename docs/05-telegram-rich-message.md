@@ -76,6 +76,6 @@ Nilai pengukuran `/ping` (`12.34 ms (0.0123 detik)`) dikirim sebagai `RichTextCo
 
 ## Pengiriman manual ke monitor
 
-`/notify <pesan>` membuat pesan manual yang mencantumkan pengirim dan waktu kirim. `/notifyair` mengambil data melalui cache yang sama dengan `/air`, lalu mengirim payload hasil `/air` tanpa mengubah isinya. Keduanya mengirim ke target yang dikonfigurasi pada `MONITOR_TARGETS_JSON`, termasuk `thread_id`, dan memberikan konfirmasi Rich Message ke chat asal.
+`/notify <pesan>` membuat pesan manual yang mencantumkan pengirim dan waktu kirim. `/notifyair` mengambil data melalui cache yang sama dengan `/air`, lalu mengirim payload hasil `/air` tanpa mengubah isinya. Keduanya mengirim ke semua target yang dikonfigurasi pada `MONITOR_TARGETS_JSON`. `thread_id` diteruskan hanya jika target memilikinya, sehingga channel dapat menerima pesan tanpa parameter thread. Keduanya memberikan konfirmasi Rich Message ke chat asal.
 
 Command manual hanya diproses untuk owner/admin. Keduanya tidak dimasukkan ke menu command publik Telegram dan tidak ditampilkan pada `/start` atau `/help` user biasa; bagian command internal hanya terlihat oleh owner/admin.

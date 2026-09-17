@@ -109,8 +109,8 @@ Setiap issue yang selesai harus memiliki implementasi, test yang relevan, dan do
 
 Sebelum deployment produksi, checklist minimum:
 
-- satu target group dan thread sudah diverifikasi;
-- bot memiliki permission mengirim pada thread tersebut;
+- semua target group/channel sudah diverifikasi;
+- bot memiliki permission mengirim pada setiap target dan topic yang digunakan;
 - `MONITOR_DRY_RUN` sudah diuji lalu dinonaktifkan dengan sengaja;
 - `/system` dapat dijalankan owner/admin;
 - health check Docker berfungsi;

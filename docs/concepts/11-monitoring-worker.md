@@ -44,7 +44,7 @@ Siklus worker:
 5. ambil field data TMA dan metadata;
 6. bandingkan dengan state terakhir;
 7. jika `MONITOR_DRY_RUN=true`, catat event simulasi tanpa memanggil Telegram;
-8. jika ada perubahan relevan dan bukan dry-run, kirim notifikasi ke target secara independen;
+8. jika ada perubahan relevan dan bukan dry-run, kirim notifikasi ke semua target secara independen;
 9. simpan state global dan hasil per target, termasuk target yang masih pending;
 10. tunggu interval berikutnya.
 
