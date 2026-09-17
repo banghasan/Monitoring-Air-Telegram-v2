@@ -48,6 +48,8 @@ Struktur tampilan yang disepakati:
 
 Nama sumber dan nama stasiun adalah inline link Rich Message; URL tidak ditampilkan sebagai teks mentah. Button peta tidak dibuat karena nama stasiun sudah membuka koordinat Google Maps. Emoji adalah bagian dari presentasi, bukan penentu status. Status tetap berasal dari field XML dan arah tetap dihitung dari dua nilai tinggi air. Nilai raw disimpan untuk diagnostik, sedangkan tampilan mengikuti website sumber (`TINGGI_AIR / 10` dalam cm).
 
+Nilai tanggal dan waktu ditampilkan sebagai monospace tanpa kata `pukul`. Baris sumber diikuti dua line break agar terdapat satu baris kosong sebelum informasi stasiun.
+
 ## Tampilan arah perubahan
 
 Perbandingan `TINGGI_AIR` dengan `TINGGI_AIR_SEBELUMNYA`:

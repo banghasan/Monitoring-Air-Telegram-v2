@@ -23,7 +23,7 @@ const reading: WaterReading = {
   statusRaw: "Status : Normal",
   statusNormalized: "NORMAL",
   thresholds: { siaga1Raw: 3000, siaga2Raw: 2500, siaga3Raw: 1500, siaga4Raw: 1 },
-  sourceUrl: "https://poskobanjir.dsdadki.web.id/",
+  sourceUrl: "https://poskobanjir.dsdadki.web.id/xmldata.xml",
   rawFields: {},
 };
 
@@ -61,12 +61,18 @@ test("air message memakai link teks, details collapsed, dan button Rich Message"
   expect(JSON.stringify(message)).toContain("Status : Normal");
   expect(JSON.stringify(message)).toContain("callback_data");
   expect(JSON.stringify(message)).toContain("    ├ 🕒");
+  expect(JSON.stringify(message)).toContain(
+    '"type":"code","text":"17 September 2026 15.10.00 WIB"',
+  );
   expect(JSON.stringify(message)).toContain("    ├ 📈 Naik · Ketinggian: -44 cm");
   expect(JSON.stringify(message)).toContain("    └ 🟢 Status : Normal");
   expect(JSON.stringify(blocks.filter((block) => block.type !== "details"))).not.toContain(
     "📥 Diambil aplikasi:",
   );
   expect(JSON.stringify(details[0])).toContain("📥 Diambil aplikasi:");
+  expect(JSON.stringify(details[0])).toContain(
+    '"type":"code","text":"17 September 2026 15.10.00 WIB"',
+  );
   expect(JSON.stringify(message)).not.toContain("pukul");
   expect(JSON.stringify(message)).not.toContain("🌊 📈");
   expect(JSON.stringify(message)).not.toContain("🚦");
@@ -107,6 +113,9 @@ test("help juga dikirim sebagai Rich Message", () => {
   expect(serialized).toContain("@hasanudinhs");
   expect(serialized).toContain("banghasan.com");
   expect(serialized).toContain("@botindonesia");
+  expect(serialized).toContain(
+    '"text":"Posko Banjir DKI Jakarta","url":"https://poskobanjir.dsdadki.web.id/"',
+  );
   const buttons = message.blocks?.find((block) => block.type === "buttons");
   expect(buttons?.type).toBe("buttons");
   if (buttons?.type === "buttons") {

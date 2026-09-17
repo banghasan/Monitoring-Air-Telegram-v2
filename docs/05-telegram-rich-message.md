@@ -59,3 +59,5 @@ Adapter memanggil `bot.api.editMessageText(chatId, messageId, richMessage)`. Gra
 ## Link dalam pesan
 
 URL sumber dan URL peta disajikan sebagai `RichTextUrl` pada teks yang relevan. URL tidak dicetak sebagai teks mentah dan tidak diduplikasi menjadi button peta. Jika koordinat tidak valid, nama stasiun tetap ditampilkan tanpa link.
+
+Link sumber mengarah ke halaman utama Posko Banjir DKI Jakarta (`https://poskobanjir.dsdadki.web.id/`), bukan endpoint XML. Nilai tanggal dan waktu menggunakan `RichTextCode`/monospace dan format `17 September 2026 18.35.00 WIB` tanpa kata `pukul`.

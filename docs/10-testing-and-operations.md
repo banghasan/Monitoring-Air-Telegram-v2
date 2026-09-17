@@ -41,6 +41,8 @@ Aturan detail tentang fixture, isolasi unit test, `bun test`, lint, type-check, 
 - Jika edit gagal/tidak didukung, fallback mengirim pesan baru.
 - Nama stasiun menjadi inline link peta memakai koordinat record aktif jika tersedia.
 - URL sumber dan URL peta tidak tampil sebagai teks mentah.
+- Link sumber mengarah ke halaman utama Posko Banjir DKI Jakarta.
+- Waktu pengamatan dan waktu pengambilan memakai format monospace tanpa kata `pukul`.
 - Status utama hanya memakai emoji status, misalnya `🟢 Status : Normal`, tanpa emoji dekoratif tambahan.
 - `/ping` menampilkan durasi proses.
 - `/version`, `/ver`, dan `/versi` menampilkan versi aplikasi.

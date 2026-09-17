@@ -37,6 +37,18 @@ function linkedText(text: string, url: string): RichText {
   return { type: "url", text, url };
 }
 
+function monospaceText(text: string): RichText {
+  return { type: "code", text };
+}
+
+function sourceWebsiteUrl(sourceUrl: string): string {
+  try {
+    return new URL("/", sourceUrl).toString();
+  } catch {
+    return sourceUrl;
+  }
+}
+
 function stationText(reading: WaterReading): RichText {
   const mapUrl = stationMapUrl(reading);
   if (!mapUrl) return `📍 ${reading.stationName}`;
@@ -65,7 +77,7 @@ function dataBlocks(
   const trend = trendFromReading(reading);
   return [
     paragraph(stationText(reading)),
-    paragraph(`    ├ 🕒 ${formatObservedAt(reading, timezone)}`),
+    paragraph(["    ├ 🕒 ", monospaceText(formatObservedAt(reading, timezone))]),
     paragraph(`    ├ ${trendLabel(trend)} · Ketinggian: ${formatCm(reading.heightRaw)} cm`),
     paragraph(`    └ ${statusEmoji(reading.statusRaw)} ${reading.statusRaw}`),
     ...(freshness.kind ? [paragraph(`📦 Data: ${freshness.kind}`)] : []),
@@ -81,7 +93,10 @@ function detailsBlocks(reading: WaterReading, timezone: string): InputRichBlock[
       type: "details",
       summary: "📋 Keterangan & Legenda",
       blocks: [
-        paragraph(`📥 Diambil aplikasi: ${formatFetchedAt(reading.fetchedAt, timezone)}`),
+        paragraph([
+          "📥 Diambil aplikasi: ",
+          monospaceText(formatFetchedAt(reading.fetchedAt, timezone)),
+        ]),
         {
           type: "table",
           is_bordered: true,
@@ -107,7 +122,11 @@ export function buildAirRichMessage(
 ): InputRichMessage {
   const blocks: InputRichBlock[] = [
     { type: "heading", size: 2, text: "🌊 PEMANTAUAN TINGGI MUKA AIR (TMA)" },
-    paragraph(["🌐 Sumber: ", linkedText("Posko Banjir DKI Jakarta", reading.sourceUrl), "\n\n"]),
+    paragraph([
+      "🌐 Sumber: ",
+      linkedText("Posko Banjir DKI Jakarta", sourceWebsiteUrl(reading.sourceUrl)),
+      "\n\n",
+    ]),
     ...dataBlocks(reading, timezone, freshness),
     divider(),
     ...detailsBlocks(reading, timezone),
@@ -148,7 +167,7 @@ export function buildHelpRichMessage(
       { type: "heading", size: 2, text: "🌊 Bot Pemantauan Air" },
       paragraph([
         "Menyediakan informasi Tinggi Muka Air (TMA) P.S. Angke Hulu dari ",
-        linkedText("Posko Banjir DKI Jakarta", sourceUrl),
+        linkedText("Posko Banjir DKI Jakarta", sourceWebsiteUrl(sourceUrl)),
         ".",
       ]),
       divider(),
