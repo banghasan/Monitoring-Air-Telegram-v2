@@ -1,5 +1,5 @@
 services:
-  bot:
+  airpantau-bot:
     image: ghcr.io/banghasan/monitoring-air-telegram-v2:${IMAGE_TAG:-latest}
     pull_policy: always
     env_file:
@@ -8,12 +8,12 @@ services:
       APP_ROLE: bot
       PORT: 3000
       MONITOR_ENABLED: "false"
-      INTERNAL_STATUS_URL: http://monitor:3000/internal/status
+      INTERNAL_STATUS_URL: http://airpantau-monitor:3000/internal/status
     command: ["bun", "run", "src/bot.ts"]
     ports:
       - "${BOT_HTTP_PORT:-3000}:3000"
     depends_on:
-      monitor:
+      airpantau-monitor:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
@@ -28,7 +28,7 @@ services:
         max-size: "10m"
         max-file: "5"
 
-  monitor:
+  airpantau-monitor:
     image: ghcr.io/banghasan/monitoring-air-telegram-v2:${IMAGE_TAG:-latest}
     pull_policy: always
     env_file:
