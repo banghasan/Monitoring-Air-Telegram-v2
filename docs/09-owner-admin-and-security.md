@@ -22,6 +22,7 @@ Informasi yang boleh ditampilkan:
 - usia snapshot dan `TANGGAL` dari sumber;
 - waktu fetch terakhir yang berhasil dan gagal;
 - status worker monitoring dan interval aktif;
+- mode dry-run monitoring;
 - jumlah target notifikasi serta hasil pengiriman terakhir per target;
 - fingerprint/perubahan terakhir yang diproses;
 - URL sumber tanpa token;
@@ -30,6 +31,7 @@ Informasi yang boleh ditampilkan:
 - ID/kode sumber sebagai metadata diagnostik;
 - jumlah hasil pencarian station;
 - penggunaan memory jika tersedia.
+- ringkasan retry dan waktu error terakhir jika tersedia.
 
 Informasi yang tidak boleh ditampilkan:
 
@@ -83,3 +85,5 @@ Log boleh mencatat error fetch, status HTTP, durasi, retry count, dan status par
 Kegagalan upstream atau target Telegram tidak dikirim sebagai broadcast ke pengguna. Informasinya cukup ada di log JSON dan ringkasan `/system`.
 
 Jika pencarian `Angke Hulu` menghasilkan lebih dari satu record, event tersebut menjadi warning penting dan dapat ditampilkan pada `/system`.
+
+Command publik memakai cooldown ringan berbasis user/chat agar bot tidak mudah dibanjiri request. `/system` tetap hanya untuk owner/admin. Mode dry-run dan kegagalan pengiriman ditampilkan sebagai status operasional, bukan sebagai broadcast ke group.

@@ -33,6 +33,8 @@ Dokumentasi dipisahkan berdasarkan tingkat kepastian:
 
 Detail monitoring ada di [konsep monitoring worker](./concepts/11-monitoring-worker.md), sedangkan risiko dan pertanyaan terbukanya dicatat di [issues](./issues/README.md).
 
+Konvensi pengembangan dicatat terpisah pada [versioning](./concepts/15-versioning-and-release.md), [testing dan quality gate](./concepts/16-testing-and-quality.md), serta [organisasi source code](./concepts/17-code-organization.md).
+
 ## Keputusan terbaru
 
 - Stasiun dipilih berdasarkan nama yang mengandung `Angke Hulu`, bukan `ID_PINTU_AIR` atau `KODE_STASIUN`.
@@ -41,11 +43,11 @@ Detail monitoring ada di [konsep monitoring worker](./concepts/11-monitoring-wor
 - Semua pengiriman pesan menggunakan Rich Message; button juga berada di dalam Rich Message.
 - Tombol `Segarkan` mencoba mengedit pesan terlebih dahulu. Jika tidak didukung atau gagal, perilaku fallback akan mengirim pesan Rich Message baru.
 - Semua deployment dimulai dari polling.
-- `TINGGI_AIR` ditampilkan apa adanya dari sumber, termasuk tanda negatif; tidak dilakukan normalisasi nilai.
+- `TINGGI_AIR` raw tetap disimpan, tetapi tampilan pengguna mengikuti website sumber: nilai raw dibagi 10 dan ditampilkan dalam cm, dengan tanda negatif dipertahankan.
 - Deployment monitoring menggunakan worker terpisah dari bot polling.
 - Worker menjalankan pemeriksaan dengan interval yang dapat diatur melalui environment, default 60 detik.
 - Worker hanya mengirim notifikasi jika `STATUS_SIAGA` berubah, dengan informasi status siaga sebagai bagian utama.
-- Notifikasi dapat diarahkan ke banyak group/channel dan optional thread ID.
+- MVP notifikasi diarahkan ke satu group forum dengan satu thread ID; model konfigurasi dapat diperluas nanti.
 - Log aplikasi ditulis ke console dalam format JSON satu object per baris agar mudah dibaca melalui `docker logs`.
 
 ## 1. Tujuan MVP
@@ -57,9 +59,9 @@ Bot diharapkan dapat:
 - menyimpan satu snapshot data di cache memory aplikasi;
 - menjalankan worker monitoring dengan interval yang dapat diatur;
 - mengirim notifikasi Rich Message ketika `STATUS_SIAGA` berubah;
-- mengirim notifikasi ke beberapa group/channel dan optional thread ID;
+- mengirim notifikasi ke satu group forum dan thread ID pada MVP;
 - berjalan dengan mode Telegram **polling** atau **webhook**;
-- dijalankan sebagai satu container Docker melalui Docker Compose;
+- dijalankan sebagai dua service/container Docker (`bot` dan `monitor`) melalui Docker Compose;
 - tidak menyimpan token Telegram atau secret ke dalam image Docker maupun repository.
 
 Di luar MVP:
@@ -94,7 +96,7 @@ Jika hasil pencarian menjadi nol, bot melaporkan data tidak tersedia. Jika hasil
 
 Respons HTTP sumber saat diperiksa juga menyediakan `Last-Modified` dan `ETag`. Keduanya boleh dipakai sebagai optimasi conditional request pada tahap berikutnya, tetapi freshness yang ditampilkan ke pengguna tetap harus ditentukan dari `TANGGAL`, `fetchedAt`, dan batas usia cache aplikasi.
 
-Nilai `TINGGI_AIR` dan ambang `SIAGA1` sampai `SIAGA4` belum boleh diasumsikan satuannya atau dihitung ulang oleh bot. Untuk MVP, tampilkan nilai mentah dan gunakan `STATUS_SIAGA` dari sumber sebagai status utama. Konfirmasi satuan dan aturan ambang dapat menjadi keputusan terpisah.
+Nilai raw `TINGGI_AIR` dan threshold `SIAGA1` sampai `SIAGA4` dipertahankan dari XML. Untuk tampilan pengguna, gunakan skala website sumber (`raw / 10` untuk cm), sedangkan `STATUS_SIAGA` dari sumber tetap menjadi status utama.
 
 ## 3. Rekomendasi cache
 
@@ -186,13 +188,15 @@ Contoh isi `/air`:
 ```text
 P.S. Angke Hulu 1
 Status: Status : Normal
-Ketinggian: -440 (nilai mentah dari sumber)
+Ketinggian: -44 cm
 Sebelumnya: -439
 Waktu pengamatan: 17 Sep 2026 13:50 WIB
 Diambil aplikasi: 17 Sep 2026 13:51 WIB
 Data: fresh
 Sumber: Posko Banjir DKI
 ```
+
+Nilai raw XML tetap disimpan untuk log dan troubleshooting. Contoh `TINGGI_AIR=-440` ditampilkan sebagai `-44 cm`, mengikuti cara website sumber menampilkan data.
 
 Jika `freshness=stale`, pesan harus memuat peringatan yang terlihat, misalnya `PERINGATAN: sumber sedang gagal diakses; ini adalah data terakhir yang berhasil diambil.`
 
@@ -361,7 +365,7 @@ Jika sumber gagal, log boleh memuat URL dan HTTP status, tetapi jangan mencetak 
 4. Semua pesan memakai Rich Message, termasuk button dan blok summary.
 5. Tombol refresh mencoba edit pesan terlebih dahulu, lalu fallback mengirim pesan baru.
 6. Deployment dimulai dengan polling.
-7. `TINGGI_AIR` ditampilkan mentah dari sumber.
+7. `TINGGI_AIR` raw disimpan, sedangkan tampilan pengguna mengikuti skala website sumber dalam cm.
 8. Cache menggunakan TTL awal 60 detik dan stale fallback 15 menit.
 9. Notifikasi hanya dipicu perubahan `STATUS_SIAGA`.
 10. Baseline pertama tidak dikirim sebagai notifikasi.

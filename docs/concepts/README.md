@@ -8,6 +8,9 @@ Folder ini berisi konsep dan keputusan arsitektur yang menjadi dasar implementas
 - [Notifikasi perubahan](./12-monitoring-notifications.md)
 - [Target Telegram](./13-telegram-notification-targets.md)
 - [Structured logging](./14-structured-logging.md)
+- [Versioning dan release](./15-versioning-and-release.md)
+- [Testing dan quality gate](./16-testing-and-quality.md)
+- [Organisasi source code](./17-code-organization.md)
 
 Dokumen detail dasar yang sudah ada di folder induk:
 

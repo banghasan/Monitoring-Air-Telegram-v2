@@ -2,7 +2,7 @@
 
 ## Tujuan deployment
 
-Bot dibuild menjadi Docker image dan dijalankan sebagai satu service Compose. Polling tidak membutuhkan endpoint publik Telegram, tetapi Elysia tetap menyediakan port untuk health check dan kebutuhan operasional.
+Bot dibuild menjadi satu Docker image dan dijalankan sebagai dua service Compose: `bot` untuk polling Telegram dan `monitor` untuk pemantauan berkala. Polling tidak membutuhkan endpoint publik Telegram, tetapi setiap service tetap menyediakan endpoint health check untuk kebutuhan operasional.
 
 ## File yang direncanakan
 
@@ -39,6 +39,14 @@ Rancangan Dockerfile:
 - jalankan process dengan user non-root bila memungkinkan;
 - sediakan endpoint `/health` untuk pemeriksaan container.
 
+Sebelum build image, pemeriksaan lokal yang direncanakan adalah:
+
+```bash
+bun run check
+```
+
+Build Docker tidak menggantikan unit test, lint, atau type-check. Workflow build manual boleh menambahkan quality gate sebagai job terpisah setelah source aplikasi tersedia.
+
 ## Runtime polling
 
 Service `bot` menjalankan:
@@ -63,6 +71,33 @@ Service `monitor` memakai image aplikasi yang sama, tetapi entrypoint/role berbe
 Bot dan worker menulis log terstruktur ke console. Docker Compose tidak perlu menyimpan file log di dalam container; pengelolaan log dilakukan dari stdout/stderr melalui Docker logging driver atau platform deployment.
 
 Deployment awal sebaiknya hanya menjalankan satu replica `monitor`. Service bot dan monitor boleh berbagi source code/image, tetapi lifecycle dan health check-nya dipisahkan.
+
+Kedua service membaca `env_file` yang sama, tetapi role process harus berbeda. Service `monitor` tetap membutuhkan token Telegram karena ia mengirim notifikasi, namun tidak boleh menjalankan `bot.start()` atau menerima update polling.
+
+## Retry, dry-run, dan health
+
+- Fetch upstream mencoba maksimal tiga kali per siklus dengan backoff yang dapat diatur environment.
+- Pengiriman ke target mencoba maksimal tiga kali per target; kegagalan satu target tidak menghentikan target lain.
+- `MONITOR_DRY_RUN=true` menjalankan alur monitoring dan menulis payload/event ke log, tetapi tidak memanggil API Telegram.
+- `/health` menunjukkan process hidup.
+- `/ready` menunjukkan konfigurasi minimum valid dan dependency internal siap; status upstream yang sedang gagal dicatat sebagai kondisi monitoring, bukan alasan mengirim broadcast error.
+- Compose memakai `restart: unless-stopped` agar process yang berhenti dapat dijalankan kembali oleh Docker.
+
+Health endpoint bukan pengganti `/system`. Endpoint tersebut dipakai Docker/orchestrator, sedangkan `/system` merangkum kondisi operasional untuk owner/admin.
+
+## Rotasi log Docker
+
+Aplikasi menulis NDJSON satu baris per event ke stdout/stderr. Compose perlu membatasi ukuran log agar `docker logs` tidak memenuhi disk host. Rancangan konfigurasi service:
+
+```yaml
+logging:
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+```
+
+Angka rotasi adalah default awal dan dapat disesuaikan dengan kebijakan host. Jangan mengubah log aplikasi menjadi pretty-print multiline karena akan menyulitkan pemrosesan event JSON.
 
 ## State worker
 

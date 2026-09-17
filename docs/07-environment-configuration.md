@@ -40,7 +40,15 @@ UPSTREAM_TIMEOUT_SECONDS=5
 # Monitoring worker
 MONITOR_INTERVAL_SECONDS=60
 MONITOR_ENABLED=true
+MONITOR_DRY_RUN=false
 MONITOR_TARGETS_JSON=[]
+UPSTREAM_MAX_ATTEMPTS=3
+UPSTREAM_RETRY_BACKOFF_SECONDS=5,15
+TELEGRAM_SEND_MAX_ATTEMPTS=3
+TELEGRAM_SEND_RETRY_BACKOFF_SECONDS=5,15
+
+# Public command protection
+PUBLIC_COMMAND_COOLDOWN_SECONDS=1
 ```
 
 ## Station variable
@@ -48,12 +56,20 @@ MONITOR_TARGETS_JSON=[]
 - `WATER_STATION_QUERY` adalah selector semantik, bukan ID.
 - `WATER_STATION_DISPLAY_NAME` hanya label UI.
 - `ID_PINTU_AIR` dan `KODE_STASIUN` tidak disimpan sebagai konfigurasi identity.
+- `APP_VERSION` untuk runtime sebaiknya diambil dari `package.json`; environment tidak boleh menjadi sumber versi kedua yang berbeda.
 
 ## Monitoring variable
 
 - `MONITOR_ENABLED` mengaktifkan worker monitoring.
 - `MONITOR_INTERVAL_SECONDS` mengatur interval pemeriksaan XML; default awal 60 detik.
-- `MONITOR_TARGETS_JSON` berisi satu atau beberapa target Telegram.
+- `MONITOR_DRY_RUN=true` menjalankan fetch, parsing, compare, dan logging tanpa mengirim request Telegram. State baseline tetap diperbarui agar dry-run tidak menghasilkan event yang sama berulang setiap siklus.
+- `MONITOR_TARGETS_JSON` untuk MVP berisi tepat satu group forum beserta `thread_id`.
+- `UPSTREAM_MAX_ATTEMPTS` mengatur jumlah percobaan fetch dalam satu siklus; default 3.
+- `UPSTREAM_RETRY_BACKOFF_SECONDS` mengatur jeda retry upstream, misalnya `5,15` detik.
+- `TELEGRAM_SEND_MAX_ATTEMPTS` mengatur jumlah percobaan pengiriman per target; default 3.
+- `TELEGRAM_SEND_RETRY_BACKOFF_SECONDS` mengatur jeda retry pengiriman, misalnya `5,15` detik.
+
+Retry memiliki batas dan tidak boleh membuat worker menunggu tanpa batas. Kegagalan setelah seluruh percobaan tidak dikirim sebagai notifikasi ke target; detailnya masuk log JSON dan `/system`.
 
 Contoh target:
 
@@ -63,17 +79,17 @@ Contoh target:
     "chat_id": "-1001234567890",
     "thread_id": 42,
     "label": "Operasional"
-  },
-  {
-    "chat_id": "@contoh_channel",
-    "label": "Channel publik"
   }
 ]
 ```
 
-`thread_id` bersifat optional. Konfigurasi internal ini nantinya dipetakan ke field thread/message Telegram sesuai schema pada [`telegram/api.md`](./telegram/api.md). Tidak semua tipe chat mendukung thread.
+`thread_id` diwajibkan untuk target MVP. Konfigurasi multi-target dan channel menjadi perluasan berikutnya. Field internal ini nantinya dipetakan ke parameter thread/message Telegram sesuai schema pada [`telegram/api.md`](./telegram/api.md).
 
 Worker awal dijalankan sebagai satu replica agar satu perubahan tidak dikirim berulang. Jika worker dibuat lebih dari satu replica, diperlukan distributed lock atau mekanisme deduplication bersama.
+
+## Public command rate limit
+
+`PUBLIC_COMMAND_COOLDOWN_SECONDS` membatasi pemanggilan command publik dari user/chat yang sama. Nilai awal satu detik cukup untuk mencegah spam ringan tanpa menghambat penggunaan normal. Rate limit ini tidak menggantikan cache dan tidak mengubah aturan notifikasi worker.
 
 ## Public access dan admin
 
@@ -94,6 +110,10 @@ Saat startup, aplikasi perlu menolak konfigurasi yang:
 - owner/admin ID tidak dapat diparse;
 - `WATER_STATION_QUERY` kosong;
 - `MONITOR_INTERVAL_SECONDS` bukan integer positif jika monitoring diaktifkan;
+- `MONITOR_DRY_RUN` bukan boolean yang valid;
 - `MONITOR_TARGETS_JSON` bukan JSON array yang valid;
-- target tidak memiliki `chat_id`;
+- target tidak memiliki `chat_id` atau `thread_id` pada konfigurasi MVP;
+- monitoring aktif dan bukan dry-run tetapi jumlah target bukan tepat satu;
+- konfigurasi retry memiliki jumlah attempt/backoff yang tidak konsisten;
+- `PUBLIC_COMMAND_COOLDOWN_SECONDS` bukan angka duration yang valid;
 - webhook configuration tidak lengkap jika mode webhook kelak diaktifkan.

@@ -2,14 +2,14 @@
 
 ## Tujuan
 
-Satu worker dapat mengirim notifikasi perubahan ke beberapa group dan channel. Setiap target dikonfigurasi secara terpisah, termasuk optional thread/topic ID.
+MVP mengirim notifikasi perubahan ke satu group forum dan satu thread/topic ID. Model konfigurasi tetap dibuat sebagai array agar perluasan ke beberapa target dapat dilakukan tanpa mengubah kontrak utama.
 
 ## Konfigurasi
 
 Gunakan satu environment variable berbentuk JSON agar optional field tidak ambigu:
 
 ```dotenv
-MONITOR_TARGETS_JSON=[{"chat_id":"-1001234567890","thread_id":42,"label":"Operasional"},{"chat_id":"@contoh_channel","label":"Channel publik"}]
+MONITOR_TARGETS_JSON=[{"chat_id":"-1001234567890","thread_id":42,"label":"Operasional"}]
 ```
 
 Model konfigurasi internal:
@@ -17,16 +17,18 @@ Model konfigurasi internal:
 | Field | Wajib | Keterangan |
 | --- | --- | --- |
 | `chat_id` | Ya | Numeric chat ID atau username channel sesuai dukungan Bot API. |
-| `thread_id` | Tidak | Topic/thread tujuan bila chat mendukungnya. |
+| `thread_id` | Ya untuk MVP | Topic/thread tujuan group forum. |
 | `label` | Tidak | Nama log agar target mudah dibedakan. |
 
 `thread_id` internal dipetakan ke parameter Telegram yang tepat berdasarkan schema pada [`telegram/api.md`](../telegram/api.md). Jangan mengasumsikan semua chat menerima thread ID.
 
+Konfigurasi tanpa thread, channel, dan banyak target dicatat sebagai perluasan masa depan. Validasi field dan method pengiriman tetap menjadi [Issue 003](../issues/003-telegram-thread-targets.md) sampai diuji dengan versi grammY dan API yang dipilih.
+
 ## Tipe target
 
-- Group dengan forum/topic: gunakan `chat_id` dan `thread_id`.
-- Group tanpa topic: gunakan `chat_id` tanpa `thread_id`.
-- Channel: gunakan `chat_id`; thread hanya dipakai jika API dan konfigurasi channel mendukungnya.
+- Target MVP: group dengan forum/topic, gunakan `chat_id` dan `thread_id`.
+- Group tanpa topic dan channel belum menjadi target deployment awal.
+- Adapter tetap disiapkan agar tipe lain dapat divalidasi pada tahap berikutnya.
 
 Bot harus memiliki izin mengirim pesan pada setiap target. Kegagalan permission dicatat per target.
 

@@ -15,12 +15,12 @@ Bagaimana parameter thread/topic dipetakan untuk group forum dan channel berdasa
 
 ## Keputusan sementara
 
-Konfigurasi memakai `chat_id` wajib dan `thread_id` optional. Adapter Telegram memvalidasi tipe target dan hanya mengirim field thread jika didukung.
+MVP memakai satu group forum dengan `chat_id` dan `thread_id` wajib. Model konfigurasi tetap berupa array agar multi-target dapat ditambahkan kemudian. Adapter Telegram harus memvalidasi tipe target dan mengirim field thread sesuai method Rich Message yang benar.
 
 ## Validasi yang diperlukan
 
 - cocokkan field dengan `sendRichMessage` pada `telegram/api.md`;
-- uji satu group dengan topic;
-- uji satu group tanpa topic;
-- uji satu channel;
+- uji satu group dengan topic yang menjadi target MVP;
+- pastikan `thread_id` diteruskan ke field API yang benar;
+- simulasikan target tanpa thread dan tipe channel sebagai validasi perluasan masa depan;
 - pastikan kegagalan satu target tidak menghentikan target lain.

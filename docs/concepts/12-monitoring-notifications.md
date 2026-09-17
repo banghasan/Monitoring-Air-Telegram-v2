@@ -38,14 +38,14 @@ Notifikasi dikirim sebagai Rich Message:
 
 📍 P.S. Angke Hulu (Baru)
   ├ 🕒 <TANGGAL> WIB
-  ├ 🌊 <TINGGI_AIR mentah> <📈 Naik / 📉 Turun / ➡️ Tetap>
+  ├ 🌊 <TINGGI_AIR dalam cm> <📈 Naik / 📉 Turun / ➡️ Tetap>
   └ 🚦 Status: <STATUS_SIAGA>
 
 📣 Perubahan status:
   └ <status lama> → <status baru>
 
 🌊 Pembacaan saat perubahan:
-  ├ Ketinggian: <TINGGI_AIR mentah>
+  ├ Ketinggian: <TINGGI_AIR dalam cm>
   └ Arah: <📈 Naik / 📉 Turun / ➡️ Tetap>
 
 ▸ 📋 Keterangan

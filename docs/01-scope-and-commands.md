@@ -39,7 +39,7 @@ Struktur tampilan yang disepakati:
    https://www.google.com/maps?q=<latitude>,<longitude>
 
   ├ 🕒 <tanggal pengamatan> WIB
-  ├ 🌊 <ikon arah> Ketinggian: <TINGGI_AIR mentah>
+  ├ 🌊 <ikon arah> Ketinggian: <TINGGI_AIR raw / 10> cm
   └ 🚦 Status: <STATUS_SIAGA>
 
 ▸ 📋 Keterangan
@@ -48,7 +48,7 @@ Struktur tampilan yang disepakati:
 [🔄 Segarkan] [🗺️ Buka Peta]
 ```
 
-Emoji adalah bagian dari presentasi, bukan penentu status. Status tetap berasal dari field XML dan arah tetap dihitung dari dua nilai tinggi air.
+Emoji adalah bagian dari presentasi, bukan penentu status. Status tetap berasal dari field XML dan arah tetap dihitung dari dua nilai tinggi air. Nilai raw disimpan untuk diagnostik, sedangkan tampilan mengikuti website sumber (`TINGGI_AIR / 10` dalam cm).
 
 ## Tampilan arah perubahan
 
@@ -84,6 +84,15 @@ Bagian berikut berada dalam blok Rich Message yang collapsed secara default:
 ### 📋 Keterangan
 
 Berisi threshold siaga yang dibaca dari record sumber yang sedang terpilih. Isinya tidak ditulis sebagai angka hardcode di handler.
+
+Format visual yang mengikuti web sumber:
+
+```text
+🔴 > 300 cm (BAHAYA)
+🟡 250–300 cm (SIAGA)
+🔵 150–250 cm (WASPADA)
+🟢 < 150 cm (Normal)
+```
 
 ### 🧭 Legenda
 

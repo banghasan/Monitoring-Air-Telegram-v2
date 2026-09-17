@@ -2,6 +2,8 @@
 
 Dokumen ini mendefinisikan checklist yang harus dipenuhi saat implementasi nanti. Tidak ada kode atau test yang dijalankan pada tahap diskusi ini.
 
+Aturan detail tentang fixture, isolasi unit test, `bun test`, lint, type-check, dan quality gate ada di [konsep Testing dan Quality Gate](./concepts/16-testing-and-quality.md). Dokumen ini mempertahankan checklist operasional tingkat aplikasi.
+
 ## Sumber data dan selector
 
 - XML valid dan dapat diparse.
@@ -13,8 +15,9 @@ Dokumen ini mendefinisikan checklist yang harus dipenuhi saat implementasi nanti
 
 ## Format nilai
 
-- `TINGGI_AIR=-440` tetap ditampilkan sebagai `-440`.
-- Tidak ada absolute value atau transformasi skala.
+- `TINGGI_AIR=-440` ditampilkan sebagai `-44 cm`, mengikuti website sumber.
+- Raw value `-440` tetap tersedia untuk log/diagnostik.
+- Tidak ada absolute value; tanda negatif dipertahankan.
 - Status memakai `STATUS_SIAGA`.
 - Arah membandingkan current dan previous.
 - Nilai sama menghasilkan `➡️ Tetap`.
@@ -45,7 +48,9 @@ Dokumen ini mendefinisikan checklist yang harus dipenuhi saat implementasi nanti
 - Perubahan `STATUS_SIAGA` selalu diprioritaskan.
 - Snapshot sama tidak mengirim pesan berulang.
 - Worker gagal fetch tidak membroadcast error setiap interval.
-- Satu perubahan dikirim ke seluruh target yang valid.
+- Retry upstream dan target berhenti setelah batas attempt.
+- Dry-run tidak memanggil API Telegram tetapi tetap mencatat payload/event.
+- Satu perubahan dikirim ke target MVP yang valid tanpa duplikasi.
 - Kegagalan satu target tidak menghentikan target lain.
 - Restart behavior mengikuti keputusan storage state worker.
 
@@ -55,6 +60,7 @@ Dokumen ini mendefinisikan checklist yang harus dipenuhi saat implementasi nanti
 - Group tanpa topic tidak memakai `thread_id`.
 - Channel diuji dengan konfigurasi tanpa thread terlebih dahulu.
 - Target invalid dilaporkan di log dan `/system`.
+- MVP menolak lebih dari satu target atau target tanpa `thread_id` sampai dukungan multi-target diaktifkan.
 
 ## Akses
 
@@ -70,5 +76,7 @@ Dokumen ini mendefinisikan checklist yang harus dipenuhi saat implementasi nanti
 - Error upstream terlihat pada log dan `/system`.
 - Setiap event log valid sebagai JSON satu baris.
 - `docker logs` dapat menampilkan error fetch dan target tanpa stack trace multiline yang merusak parser.
+- Rotasi log Docker aktif dengan batas ukuran dan jumlah file.
+- Cooldown command publik mencegah spam ringan.
 - Tidak ada token, secret, atau XML penuh di log.
 - Kegagalan tidak menghasilkan notifikasi broadcast.

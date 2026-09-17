@@ -43,9 +43,12 @@ Siklus worker:
 4. validasi jumlah hasil;
 5. ambil field data TMA dan metadata;
 6. bandingkan dengan state terakhir;
-7. jika ada perubahan relevan, kirim notifikasi ke semua target;
-8. simpan state setelah hasil pengiriman diproses;
-9. tunggu interval berikutnya.
+7. jika `MONITOR_DRY_RUN=true`, catat event simulasi tanpa memanggil Telegram;
+8. jika ada perubahan relevan dan bukan dry-run, kirim notifikasi ke target secara independen;
+9. simpan state global dan hasil per target, termasuk target yang masih pending;
+10. tunggu interval berikutnya.
+
+Perubahan status yang sama tidak boleh dikirim berulang hanya karena scheduler berjalan. Target yang gagal dapat dicoba kembali dengan retry terbatas atau pada siklus berikutnya, tanpa mengirim ulang target yang sudah sukses untuk event/fingerprint yang sama.
 
 ## Monitoring langsung bersama polling
 
@@ -66,6 +69,16 @@ Worker memerlukan state minimal yang persistent, bukan histori penuh:
 - hasil pengiriman per target bila diperlukan untuk retry.
 
 Keputusan: gunakan SQLite atau file state atomik pada named volume worker. SQLite menjadi pilihan utama jika state per target dan retry mulai bertambah. Cache memory saja tidak cukup karena state hilang ketika container restart.
+
+## Retry dan dry-run
+
+Retry upstream dan Telegram dibatasi oleh environment. Retry hanya menangani kegagalan sementara; error konfigurasi, selector ambigu, atau status sumber kosong tidak boleh dipaksa menjadi notifikasi.
+
+Dry-run tetap menjalankan selector, normalisasi, perbandingan status, pembuatan payload, dan structured logging. Dry-run tidak melakukan side effect ke Telegram. Baseline tetap disimpan agar mode ini dapat dipakai untuk memvalidasi deployment tanpa menghasilkan pesan.
+
+## Health dan observability
+
+Worker menyediakan `/health` untuk process hidup dan `/ready` untuk kesiapan konfigurasi/service. Kegagalan fetch, parsing, retry, target, dan perubahan status ditulis sebagai JSON ke console. Tidak ada notifikasi error terpisah ke group.
 
 ## Aturan satu worker
 
