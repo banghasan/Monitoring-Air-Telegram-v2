@@ -1,0 +1,18 @@
+# Issues dan Pertanyaan Terbuka
+
+Folder ini berisi hal yang belum final, risiko implementasi, dan keputusan yang harus divalidasi sebelum coding.
+
+## Issue aktif
+
+- [001 — Rich Message edit compatibility](./001-rich-message-edit-compatibility.md)
+- [002 — State worker monitoring](./002-monitor-worker-state.md)
+- [003 — Thread dan tipe target Telegram](./003-telegram-thread-targets.md)
+- [004 — Satu worker dan duplicate notification](./004-monitor-worker-duplication.md)
+
+## Cara membaca status
+
+- `Open`: belum ada keputusan final.
+- `Proposed`: ada rekomendasi, tetapi belum disetujui.
+- `Resolved`: keputusan sudah masuk ke konsep dan tidak lagi menjadi blocker.
+
+Issue tidak boleh diam-diam diubah menjadi implementasi. Setelah keputusan dibuat, update issue dan dokumen konsep terkait.
