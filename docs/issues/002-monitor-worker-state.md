@@ -14,7 +14,9 @@ Di mana worker menyimpan fingerprint dan snapshot terakhir agar restart tidak me
 
 ## Keputusan
 
-Gunakan state persistent lokal pada named volume worker. SQLite menjadi pilihan utama; file state atomik hanya menjadi alternatif jika kebutuhan state tetap sederhana. Tidak perlu menyimpan histori lengkap; cukup fingerprint terakhir, snapshot relevan, dan hasil kirim per target.
+Gunakan state persistent lokal pada named volume worker. SQLite melalui `bun:sqlite` menjadi pilihan utama; file state atomik hanya menjadi alternatif jika kebutuhan state tetap sederhana. Tidak perlu menyimpan histori lengkap; cukup fingerprint terakhir, snapshot relevan, dan hasil kirim per target. Detail keputusan ada di [konsep SQLite](../concepts/18-sqlite-state-and-migrations.md).
+
+Service `monitor` menjadi pemilik database dan satu-satunya writer. Service `bot` membaca ringkasan status melalui internal status endpoint, bukan membuka file SQLite monitor secara langsung.
 
 ## Dampak ke cache
 

@@ -53,6 +53,8 @@ Aturan detail tentang fixture, isolasi unit test, `bun test`, lint, type-check, 
 - Satu perubahan dikirim ke target MVP yang valid tanpa duplikasi.
 - Kegagalan satu target tidak menghentikan target lain.
 - Restart behavior mengikuti keputusan storage state worker.
+- Database state memakai temporary SQLite per test dan tidak berbagi file antar test.
+- Migration diuji pada database kosong dan database versi sebelumnya.
 
 ## Target Telegram
 

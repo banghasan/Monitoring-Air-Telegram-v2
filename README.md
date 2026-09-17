@@ -27,6 +27,7 @@ Rancangan bot Telegram untuk pemantauan tinggi muka air Angke Hulu menggunakan d
 - [Dokumentasi utama](./docs/README.md)
 - [Dokumentasi data](./docs/data/README.md)
 - [Konsep arsitektur](./docs/concepts/README.md)
+- [Contoh deployment Compose GHCR](./docs/deployment/01-compose-ghcr.md)
 - [Versioning, testing, dan organisasi source code](./docs/concepts/15-versioning-and-release.md)
 - [Issues dan pertanyaan terbuka](./docs/issues/README.md)
 - [Referensi Telegram Bot API lokal](./docs/telegram/api.md)

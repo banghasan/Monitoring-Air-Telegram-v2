@@ -11,6 +11,8 @@ Folder ini berisi konsep dan keputusan arsitektur yang menjadi dasar implementas
 - [Versioning dan release](./15-versioning-and-release.md)
 - [Testing dan quality gate](./16-testing-and-quality.md)
 - [Organisasi source code](./17-code-organization.md)
+- [SQLite, state, dan migration](./18-sqlite-state-and-migrations.md)
+- [Rekomendasi profesional](./19-professional-recommendations.md)
 
 Dokumen detail dasar yang sudah ada di folder induk:
 

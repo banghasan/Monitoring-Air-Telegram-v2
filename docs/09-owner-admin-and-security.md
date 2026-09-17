@@ -23,6 +23,7 @@ Informasi yang boleh ditampilkan:
 - waktu fetch terakhir yang berhasil dan gagal;
 - status worker monitoring dan interval aktif;
 - mode dry-run monitoring;
+- status internal endpoint monitor jika bot dan monitor berjalan sebagai service terpisah;
 - jumlah target notifikasi serta hasil pengiriman terakhir per target;
 - fingerprint/perubahan terakhir yang diproses;
 - URL sumber tanpa token;

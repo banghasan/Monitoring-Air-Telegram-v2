@@ -11,6 +11,7 @@ Configuration dibaca dari environment. Secret tidak ditulis ke source code, Dock
 NODE_ENV=development
 APP_VERSION=0.1.0
 PORT=3000
+APP_ROLE=bot
 TIMEZONE=Asia/Jakarta
 LOG_LEVEL=info
 LOG_FORMAT=json
@@ -42,10 +43,15 @@ MONITOR_INTERVAL_SECONDS=60
 MONITOR_ENABLED=true
 MONITOR_DRY_RUN=false
 MONITOR_TARGETS_JSON=[]
+MONITOR_STATE_DB_PATH=/data/state/monitor.sqlite
 UPSTREAM_MAX_ATTEMPTS=3
 UPSTREAM_RETRY_BACKOFF_SECONDS=5,15
 TELEGRAM_SEND_MAX_ATTEMPTS=3
 TELEGRAM_SEND_RETRY_BACKOFF_SECONDS=5,15
+
+# Internal bot <-> monitor status
+INTERNAL_STATUS_URL=http://monitor:3000/internal/status
+INTERNAL_STATUS_TOKEN=replace-with-random-secret
 
 # Public command protection
 PUBLIC_COMMAND_COOLDOWN_SECONDS=1
@@ -57,6 +63,7 @@ PUBLIC_COMMAND_COOLDOWN_SECONDS=1
 - `WATER_STATION_DISPLAY_NAME` hanya label UI.
 - `ID_PINTU_AIR` dan `KODE_STASIUN` tidak disimpan sebagai konfigurasi identity.
 - `APP_VERSION` untuk runtime sebaiknya diambil dari `package.json`; environment tidak boleh menjadi sumber versi kedua yang berbeda.
+- `APP_ROLE` menentukan role container: `bot` atau `monitor`.
 
 ## Monitoring variable
 
@@ -64,6 +71,7 @@ PUBLIC_COMMAND_COOLDOWN_SECONDS=1
 - `MONITOR_INTERVAL_SECONDS` mengatur interval pemeriksaan XML; default awal 60 detik.
 - `MONITOR_DRY_RUN=true` menjalankan fetch, parsing, compare, dan logging tanpa mengirim request Telegram. State baseline tetap diperbarui agar dry-run tidak menghasilkan event yang sama berulang setiap siklus.
 - `MONITOR_TARGETS_JSON` untuk MVP berisi tepat satu group forum beserta `thread_id`.
+- `MONITOR_STATE_DB_PATH` menunjuk database SQLite pada named volume milik service `monitor`.
 - `UPSTREAM_MAX_ATTEMPTS` mengatur jumlah percobaan fetch dalam satu siklus; default 3.
 - `UPSTREAM_RETRY_BACKOFF_SECONDS` mengatur jeda retry upstream, misalnya `5,15` detik.
 - `TELEGRAM_SEND_MAX_ATTEMPTS` mengatur jumlah percobaan pengiriman per target; default 3.
@@ -91,6 +99,12 @@ Worker awal dijalankan sebagai satu replica agar satu perubahan tidak dikirim be
 
 `PUBLIC_COMMAND_COOLDOWN_SECONDS` membatasi pemanggilan command publik dari user/chat yang sama. Nilai awal satu detik cukup untuk mencegah spam ringan tanpa menghambat penggunaan normal. Rate limit ini tidak menggantikan cache dan tidak mengubah aturan notifikasi worker.
 
+## Internal status variable
+
+- `INTERNAL_STATUS_URL` hanya dipakai service `bot` untuk membaca ringkasan status monitor melalui jaringan internal Compose.
+- `INTERNAL_STATUS_TOKEN` wajib sama pada bot dan monitor, tetapi tidak boleh ditampilkan pada `/system` atau log.
+- File SQLite hanya dibuka oleh monitor. Bot tidak menggunakan `MONITOR_STATE_DB_PATH` untuk membaca database secara langsung.
+
 ## Public access dan admin
 
 Bot bersifat publik. Tidak ada `TELEGRAM_ALLOWED_CHAT_IDS` pada keputusan saat ini.
@@ -109,6 +123,7 @@ Saat startup, aplikasi perlu menolak konfigurasi yang:
 - angka duration bukan integer positif;
 - owner/admin ID tidak dapat diparse;
 - `WATER_STATION_QUERY` kosong;
+- `APP_ROLE` bukan `bot` atau `monitor`;
 - `MONITOR_INTERVAL_SECONDS` bukan integer positif jika monitoring diaktifkan;
 - `MONITOR_DRY_RUN` bukan boolean yang valid;
 - `MONITOR_TARGETS_JSON` bukan JSON array yang valid;
@@ -116,4 +131,6 @@ Saat startup, aplikasi perlu menolak konfigurasi yang:
 - monitoring aktif dan bukan dry-run tetapi jumlah target bukan tepat satu;
 - konfigurasi retry memiliki jumlah attempt/backoff yang tidak konsisten;
 - `PUBLIC_COMMAND_COOLDOWN_SECONDS` bukan angka duration yang valid;
+- status endpoint internal aktif tetapi URL/token tidak lengkap;
+- role `monitor` tidak memiliki path state SQLite yang dapat ditulis;
 - webhook configuration tidak lengkap jika mode webhook kelak diaktifkan.

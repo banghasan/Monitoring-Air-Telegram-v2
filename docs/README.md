@@ -18,6 +18,7 @@ Dokumen detail dipisahkan agar keputusan produk, sumber data, format pesan Teleg
 - [Mode polling](./06-telegram-polling.md)
 - [Environment configuration](./07-environment-configuration.md)
 - [Docker Compose](./08-docker-compose.md)
+- [Contoh deployment Compose dari GHCR](./deployment/01-compose-ghcr.md)
 - [Owner, admin, dan keamanan](./09-owner-admin-and-security.md)
 - [Testing dan operasi](./10-testing-and-operations.md)
 
@@ -33,7 +34,7 @@ Dokumentasi dipisahkan berdasarkan tingkat kepastian:
 
 Detail monitoring ada di [konsep monitoring worker](./concepts/11-monitoring-worker.md), sedangkan risiko dan pertanyaan terbukanya dicatat di [issues](./issues/README.md).
 
-Konvensi pengembangan dicatat terpisah pada [versioning](./concepts/15-versioning-and-release.md), [testing dan quality gate](./concepts/16-testing-and-quality.md), serta [organisasi source code](./concepts/17-code-organization.md).
+Konvensi pengembangan dicatat terpisah pada [versioning](./concepts/15-versioning-and-release.md), [testing dan quality gate](./concepts/16-testing-and-quality.md), [organisasi source code](./concepts/17-code-organization.md), [SQLite dan migration](./concepts/18-sqlite-state-and-migrations.md), serta [rekomendasi profesional](./concepts/19-professional-recommendations.md).
 
 ## Keputusan terbaru
 

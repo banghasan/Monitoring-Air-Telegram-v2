@@ -68,7 +68,9 @@ Worker memerlukan state minimal yang persistent, bukan histori penuh:
 - waktu fetch terakhir;
 - hasil pengiriman per target bila diperlukan untuk retry.
 
-Keputusan: gunakan SQLite atau file state atomik pada named volume worker. SQLite menjadi pilihan utama jika state per target dan retry mulai bertambah. Cache memory saja tidak cukup karena state hilang ketika container restart.
+Keputusan MVP: gunakan SQLite melalui `bun:sqlite` pada named volume worker. File state atomik hanya fallback jika scope state tetap sangat kecil. Cache memory saja tidak cukup karena state hilang ketika container restart. Detail schema dan migration ada di [konsep SQLite](./18-sqlite-state-and-migrations.md).
+
+Service `monitor` adalah pemilik database dan satu-satunya writer. Service `bot` tidak membuka file SQLite yang sama; informasi `/system` diperoleh melalui internal status endpoint monitor.
 
 ## Retry dan dry-run
 

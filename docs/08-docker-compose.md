@@ -14,6 +14,8 @@ docker-compose.yml
 .env                 # lokal/production, tidak di-commit
 ```
 
+Contoh Compose yang memakai image GHCR tersedia di [deployment Compose GHCR](./deployment/01-compose-ghcr.md). File tersebut adalah contoh dokumentasi; tidak ada file Compose production yang dijalankan pada tahap diskusi.
+
 ## Environment
 
 Docker Compose memuat environment production melalui `env_file`. Secret hanya diberikan saat container dijalankan dan tidak dimasukkan ke layer image.
@@ -72,7 +74,7 @@ Bot dan worker menulis log terstruktur ke console. Docker Compose tidak perlu me
 
 Deployment awal sebaiknya hanya menjalankan satu replica `monitor`. Service bot dan monitor boleh berbagi source code/image, tetapi lifecycle dan health check-nya dipisahkan.
 
-Kedua service membaca `env_file` yang sama, tetapi role process harus berbeda. Service `monitor` tetap membutuhkan token Telegram karena ia mengirim notifikasi, namun tidak boleh menjalankan `bot.start()` atau menerima update polling.
+Kedua service membaca `env_file` yang sama, tetapi `APP_ROLE` dan lifecycle process harus berbeda. Service `monitor` tetap membutuhkan token Telegram karena ia mengirim notifikasi, namun tidak boleh menjalankan `bot.start()` atau menerima update polling.
 
 ## Retry, dry-run, dan health
 
@@ -101,9 +103,11 @@ Angka rotasi adalah default awal dan dapat disesuaikan dengan kebijakan host. Ja
 
 ## State worker
 
-Cache memory saja cukup untuk command on-demand, tetapi notifikasi perubahan memerlukan minimal state perubahan terakhir. Pilihan penyimpanan state dicatat sebagai issue terpisah: volume lokal/SQLite, file state atomik, atau storage bersama seperti Redis.
+Cache memory saja cukup untuk command on-demand, tetapi notifikasi perubahan memerlukan minimal state perubahan terakhir. Keputusan awal memakai SQLite melalui `bun:sqlite` pada named volume milik service `monitor`. Detail schema, migration, dan backup ada di [konsep SQLite](./concepts/18-sqlite-state-and-migrations.md).
 
 Tanpa state persisten, worker dapat mengirim notifikasi ulang setelah restart atau kehilangan perubahan yang terjadi selama worker mati.
+
+Service `bot` tidak membuka file SQLite monitor secara langsung. Jika `/system` membutuhkan status worker, bot mengambil ringkasan melalui internal status endpoint pada jaringan Compose dengan service token.
 
 ## Webhook masa depan
 
