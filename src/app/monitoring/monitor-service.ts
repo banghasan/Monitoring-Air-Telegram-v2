@@ -180,6 +180,11 @@ export class MonitorService {
     const maximum = this.options.config.monitor.telegramSendMaxAttempts;
     const remaining = maximum - delivery.attemptCount;
     if (remaining <= 0) return;
+    const targetFields = {
+      target: delivery.target.label,
+      chat_id: delivery.target.chatId,
+      thread_id: delivery.target.threadId,
+    };
     const event: NotificationEvent = {
       eventId: delivery.event.eventId,
       stationKey: delivery.event.stationKey,
@@ -202,6 +207,7 @@ export class MonitorService {
           onRetry: retryLogger(
             this.options.logger,
             `telegram notification ${delivery.target.label}`,
+            targetFields,
           ),
         },
       );
@@ -213,7 +219,7 @@ export class MonitorService {
       );
       this.options.logger.info("notification.send.success", "notification sent", {
         event_id: delivery.event.eventId,
-        target: delivery.target.label,
+        ...targetFields,
         attempt_count: delivery.attemptCount + attemptsUsed,
       });
     } catch (error) {
@@ -226,7 +232,7 @@ export class MonitorService {
       );
       this.options.logger.error("notification.send.error", "notification delivery failed", error, {
         event_id: delivery.event.eventId,
-        target: delivery.target.label,
+        ...targetFields,
         attempt_count: attemptCount,
       });
     }

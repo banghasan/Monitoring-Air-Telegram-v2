@@ -32,10 +32,15 @@ export async function withRetry<T>(
   throw lastError instanceof Error ? lastError : new Error(`${options.operation} gagal`);
 }
 
-export function retryLogger(logger: StructuredLogger, operation: string): RetryOptions["onRetry"] {
+export function retryLogger(
+  logger: StructuredLogger,
+  operation: string,
+  fields: Record<string, unknown> = {},
+): RetryOptions["onRetry"] {
   return (attempt, delaySeconds, error) => {
     logger.warn("worker.retry", "retry scheduled", {
       operation,
+      ...fields,
       attempt,
       delay_seconds: delaySeconds,
       ...(error instanceof Error ? { error_message: error.message } : {}),

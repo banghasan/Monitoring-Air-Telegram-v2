@@ -22,6 +22,11 @@ Format ini juga dapat diproses oleh `jq`, Docker logging driver, atau log collec
 - field tambahan berisi metadata terstruktur;
 - token, secret, authorization header, dan XML penuh tidak pernah dicatat.
 
+Untuk retry atau pengiriman ke target Telegram, log juga mencatat `target`, `chat_id`,
+`thread_id`, dan `attempt` agar kegagalan dapat dilacak ke group/topic yang tepat.
+Identifier tujuan Telegram bukan secret dan boleh dicatat; token bot tetap tidak boleh
+dicatat.
+
 ## Field yang disarankan
 
 ```json
@@ -61,6 +66,19 @@ Field sensitif atau detail yang tidak dibutuhkan tidak boleh ditambahkan hanya u
 | `notification.send.success` | `info` | monitor |
 | `notification.send.error` | `error` | monitor |
 | `worker.retry` | `warn` | monitor |
+
+Event `worker.retry`, `notification.send.success`, `notification.send.error`,
+`telegram.manual_dispatch.success`, dan `telegram.manual_dispatch.error` menyertakan
+metadata target jika operasi memiliki tujuan Telegram, contohnya:
+
+```json
+{
+  "target": "Monitoring",
+  "chat_id": "-1001234567890",
+  "thread_id": 5,
+  "attempt": 1
+}
+```
 
 ## Kegagalan
 

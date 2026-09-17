@@ -1,6 +1,7 @@
 services:
   airpantau-bot:
     image: ghcr.io/banghasan/monitoring-air-telegram-v2:${IMAGE_TAG:-latest}
+    container_name: airpantau-bot
     pull_policy: always
     env_file:
       - ${ENV_FILE:-.env}
@@ -30,6 +31,7 @@ services:
 
   airpantau-monitor:
     image: ghcr.io/banghasan/monitoring-air-telegram-v2:${IMAGE_TAG:-latest}
+    container_name: airpantau-monitor
     pull_policy: always
     env_file:
       - ${ENV_FILE:-.env}

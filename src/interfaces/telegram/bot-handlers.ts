@@ -349,25 +349,28 @@ async function dispatchToMonitorTargets(
   let sentCount = 0;
   const failedTargets: string[] = [];
   for (const target of config.monitor.targets) {
+    const targetFields = {
+      target: target.label,
+      chat_id: target.chatId,
+      thread_id: target.threadId,
+    };
     try {
       await withRetry(() => client.send(target, message), {
         operation: `${operationName} ${target.label}`,
         maxAttempts: config.monitor.telegramSendMaxAttempts,
         backoffSeconds: config.monitor.telegramSendRetryBackoffSeconds,
-        onRetry: retryLogger(logger, `${operationName} ${target.label}`),
+        onRetry: retryLogger(logger, `${operationName} ${target.label}`, targetFields),
       });
       sentCount += 1;
       logger.info("telegram.manual_dispatch.success", "manual monitor message sent", {
         operation: operationName,
-        target: target.label,
-        thread_id: target.threadId,
+        ...targetFields,
       });
     } catch (error) {
       failedTargets.push(target.label);
       logger.error("telegram.manual_dispatch.error", "manual monitor message failed", error, {
         operation: operationName,
-        target: target.label,
-        thread_id: target.threadId,
+        ...targetFields,
       });
     }
   }
