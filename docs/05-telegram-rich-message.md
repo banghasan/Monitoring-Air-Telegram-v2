@@ -20,6 +20,7 @@ Semua output bot menggunakan Rich Message:
 - `/version`, `/ver`, dan `/versi` memakai Rich Message;
 - `/notify <pesan>` memakai Rich Message ketika owner/admin mengirim informasi manual ke target monitor;
 - `/notifyair` memakai payload Rich Message yang sama dengan `/air` ketika owner/admin mengirim snapshot ke target monitor;
+- `/notify` dan `/notifyair` memberi konfirmasi progres dengan mengedit satu Rich Message yang sama sampai laporan akhir;
 - `/start` dan `/help` menyertakan informasi pengembang serta button Rich Message grup diskusi;
 - `/start` dan `/help` memakai Rich Message;
 - button diletakkan sebagai block/button Rich Message;
@@ -76,6 +77,10 @@ Nilai pengukuran `/ping` (`12.34 ms (0.0123 detik)`) dikirim sebagai `RichTextCo
 
 ## Pengiriman manual ke monitor
 
-`/notify <pesan>` membuat pesan manual yang mencantumkan pengirim dan waktu kirim. `/notifyair` mengambil data melalui cache yang sama dengan `/air`, lalu mengirim payload hasil `/air` tanpa mengubah isinya. Keduanya mengirim ke semua target yang dikonfigurasi pada `MONITOR_TARGETS_JSON`. `thread_id` diteruskan hanya jika target memilikinya, sehingga channel dapat menerima pesan tanpa parameter thread. Keduanya memberikan konfirmasi Rich Message ke chat asal.
+`/notify <pesan>` membuat pesan manual yang mencantumkan pengirim dan waktu kirim. `/notifyair` mengambil data melalui cache yang sama dengan `/air`, lalu mengirim payload hasil `/air` tanpa mengubah isinya. Keduanya mengirim ke semua target yang dikonfigurasi pada `MONITOR_TARGETS_JSON`. `thread_id` diteruskan hanya jika target memilikinya, sehingga channel dapat menerima pesan tanpa parameter thread.
+
+Sebelum pengiriman target dimulai, bot mengirim Rich Message progres ke chat asal. Pesan tersebut mencantumkan command, jumlah target, label, `chat_id`, dan `thread_id` bila ada. Setiap target ditampilkan sebagai `Menunggu`, `Mengirim`, `Berhasil`, atau `Gagal`; setelah semua target selesai, pesan yang sama diedit menjadi laporan final terperinci. Laporan final menyertakan error ringkas per target yang gagal. Jika edit gagal, bot mencoba mengirim laporan Rich Message baru dan mencatat kegagalannya pada log JSON.
+
+Untuk `/notifyair`, pesan progres dikirim sebelum cache/sumber dibaca sehingga command langsung memberi respons. Bila data gagal disiapkan, pesan progres diedit menjadi `Pengiriman dibatalkan` dengan target berstatus `Dilewati`; tidak ada notifikasi error ke target monitor.
 
 Command manual hanya diproses untuk owner/admin. Keduanya tidak dimasukkan ke menu command publik Telegram dan tidak ditampilkan pada `/start` atau `/help` user biasa; bagian command internal hanya terlihat oleh owner/admin.

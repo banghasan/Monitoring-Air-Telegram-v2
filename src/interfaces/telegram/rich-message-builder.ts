@@ -4,6 +4,7 @@ import type {
   RichBlockTableCell,
   RichText,
 } from "@grammyjs/types";
+import type { TelegramChatId } from "../../config/config.js";
 import type { WaterReading } from "../../domain/water/types.js";
 import {
   formatCm,
@@ -24,6 +25,18 @@ const TREE_INDENT = "\u00a0\u00a0\u00a0\u00a0";
 export interface AirMessageFreshness {
   kind?: "fresh" | "cache" | "stale";
   sourceFresh?: boolean;
+}
+
+export type MonitorDispatchCommand = "notify" | "notifyair";
+export type MonitorDispatchTargetState = "pending" | "sending" | "sent" | "failed" | "skipped";
+export type MonitorDispatchPhase = "preparing" | "sending" | "completed" | "failed";
+
+export interface MonitorDispatchTargetView {
+  label: string;
+  chatId: TelegramChatId;
+  threadId?: number;
+  state: MonitorDispatchTargetState;
+  errorMessage?: string;
 }
 
 function paragraph(text: RichText): InputRichBlock {
@@ -277,24 +290,110 @@ export function buildManualMonitorRichMessage(
   };
 }
 
-export function buildMonitorDispatchResultRichMessage(
+const monitorDispatchStatePresentation: Record<
+  MonitorDispatchTargetState,
+  { emoji: string; label: string }
+> = {
+  pending: { emoji: "⏳", label: "Menunggu" },
+  sending: { emoji: "📤", label: "Mengirim" },
+  sent: { emoji: "✅", label: "Berhasil" },
+  failed: { emoji: "❌", label: "Gagal" },
+  skipped: { emoji: "⏸️", label: "Dilewati" },
+};
+
+function monitorDispatchTargetBlocks(
+  targets: readonly MonitorDispatchTargetView[],
+): InputRichBlock[] {
+  if (targets.length === 0) {
+    return [paragraph("🎯 Tidak ada target monitor yang diproses.")];
+  }
+
+  return targets.flatMap((target, index) => {
+    const branch = index === targets.length - 1 ? "└" : "├";
+    const presentation = monitorDispatchStatePresentation[target.state];
+    const targetLine: RichText[] = [
+      `${TREE_INDENT}${branch} ${presentation.emoji} ${target.label} · ${presentation.label} · chat_id: `,
+      monospaceText(String(target.chatId)),
+    ];
+    if (target.threadId !== undefined) {
+      targetLine.push(" · thread_id: ", monospaceText(String(target.threadId)));
+    }
+
+    const blocks: InputRichBlock[] = [paragraph(targetLine)];
+    if (target.errorMessage) {
+      blocks.push(paragraph([`${TREE_INDENT}   └ Error: `, monospaceText(target.errorMessage)]));
+    }
+    return blocks;
+  });
+}
+
+function monitorDispatchTitle(
+  phase: MonitorDispatchPhase,
   sentCount: number,
   totalCount: number,
-  failedTargets: string[] = [],
+): string {
+  if (phase === "preparing") return "📤 MENYIAPKAN PENGIRIMAN";
+  if (phase === "sending") return "📡 PROGRES PENGIRIMAN";
+  if (phase === "failed") return "❌ PENGIRIMAN DIBATALKAN";
+  return sentCount === totalCount
+    ? "✅ TERKIRIM KE MONITOR"
+    : sentCount > 0
+      ? "⚠️ SEBAGIAN TERKIRIM"
+      : "❌ TIDAK TERKIRIM KE MONITOR";
+}
+
+export function buildMonitorDispatchProgressRichMessage(
+  command: MonitorDispatchCommand,
+  targets: readonly MonitorDispatchTargetView[],
+  phase: MonitorDispatchPhase,
+  note?: string,
 ): InputRichMessage {
-  const title =
-    sentCount === totalCount
-      ? "✅ TERKIRIM KE MONITOR"
-      : sentCount > 0
-        ? "⚠️ SEBAGIAN TERKIRIM"
-        : "❌ TIDAK TERKIRIM KE MONITOR";
+  const sentCount = targets.filter((target) => target.state === "sent").length;
+  const failedCount = targets.filter((target) => target.state === "failed").length;
+  const activeCount = targets.filter(
+    (target) => target.state === "pending" || target.state === "sending",
+  ).length;
+  const totalCount = targets.length;
+  const commandText = `/${command}`;
+  const summary =
+    phase === "preparing"
+      ? ([
+          "📨 ",
+          monospaceText(commandText),
+          " akan dikirim ke ",
+          monospaceText(String(totalCount)),
+          " target monitor.",
+        ] satisfies RichText[])
+      : phase === "sending"
+        ? ([
+            "📡 Progres: ",
+            monospaceText(`${sentCount}/${totalCount}`),
+            " target berhasil",
+            ...(failedCount > 0 ? [` · ${failedCount} gagal`] : []),
+            ...(activeCount > 0 ? [` · ${activeCount} diproses/menunggu`] : []),
+            ".",
+          ] satisfies RichText[])
+        : phase === "failed"
+          ? (["⚠️ ", note ?? "Proses pengiriman tidak dilanjutkan."] satisfies RichText[])
+          : ([
+              "📡 Hasil: ",
+              monospaceText(`${sentCount}/${totalCount}`),
+              " target berhasil",
+              ...(failedCount > 0 ? [` · ${failedCount} gagal`] : []),
+              ".",
+            ] satisfies RichText[]);
+
   return {
     blocks: [
-      { type: "heading", size: 2, text: title },
-      paragraph(`📡 Target monitor: ${sentCount}/${totalCount} berhasil`),
-      ...(failedTargets.length > 0
-        ? [paragraph(`⚠️ Target gagal: ${failedTargets.join(", ")}`)]
-        : []),
+      {
+        type: "heading",
+        size: 2,
+        text: monitorDispatchTitle(phase, sentCount, totalCount),
+      },
+      paragraph(["🧭 Perintah: ", monospaceText(commandText)]),
+      paragraph(summary),
+      paragraph("🎯 Rincian target:"),
+      ...monitorDispatchTargetBlocks(targets),
     ],
   };
 }

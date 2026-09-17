@@ -63,13 +63,13 @@ Contoh:
 /notify Uji notifikasi monitor dari owner
 ```
 
-Pesan tujuan mencantumkan label `📣 PESAN MONITOR`, pengirim, waktu kirim dalam monospace, dan isi pesan. Bot mengirim konfirmasi Rich Message ke chat asal. Jika target kosong atau pengiriman gagal, pesan error tidak dikirim ke target monitor; detail kegagalan dicatat dalam log JSON dan ringkasan hasil terakhir tersedia melalui `/system`. Status ini hanya berada di memory process bot dan kembali kosong setelah restart.
+Pesan tujuan mencantumkan label `📣 PESAN MONITOR`, pengirim, waktu kirim dalam monospace, dan isi pesan. Bot lebih dahulu mengirim pesan progres Rich Message ke chat asal, lalu mengedit pesan yang sama setelah setiap target selesai dan pada laporan akhir. Laporan akhir mencantumkan label, `chat_id`, `thread_id` jika ada, status `Berhasil`/`Gagal`, serta error ringkas per target. Jika target kosong atau pengiriman gagal, pesan error tidak dikirim ke target monitor; detail kegagalan dicatat dalam log JSON dan ringkasan hasil terakhir tersedia melalui `/system`. Status ini hanya berada di memory process bot dan kembali kosong setelah restart.
 
 Command ini sengaja tidak dimasukkan ke daftar command publik Telegram. User non-owner/admin tidak mendapat respons dan tidak menghasilkan pengiriman.
 
 ## `/notifyair`
 
-Command ini memakai cache yang sama dengan `/air`, termasuk status `fresh`, `cache`, atau `stale`, lalu mengirim payload Rich Message `/air` ke setiap target pada `MONITOR_TARGETS_JSON`. Dengan begitu isi yang diterima group monitor sama dengan isi yang akan diterima pengguna ketika menjalankan `/air`, termasuk inline link, details, tabel, dan button refresh.
+Command ini lebih dahulu mengirim pesan progres ke chat asal, kemudian memakai cache yang sama dengan `/air`, termasuk status `fresh`, `cache`, atau `stale`, lalu mengirim payload Rich Message `/air` ke setiap target pada `MONITOR_TARGETS_JSON`. Dengan begitu isi yang diterima group monitor sama dengan isi yang akan diterima pengguna ketika menjalankan `/air`, termasuk inline link, details, tabel, dan button refresh. Pesan progres yang sama diedit menjadi laporan final per target.
 
 Contoh:
 

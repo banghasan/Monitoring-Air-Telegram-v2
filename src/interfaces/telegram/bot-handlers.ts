@@ -6,12 +6,17 @@ import type { WaterCache } from "../../infrastructure/cache/water-cache.js";
 import type { StructuredLogger } from "../../infrastructure/logging/structured-logger.js";
 import { retryLogger, withRetry } from "../../infrastructure/retry/retry.js";
 import type { TelegramRichClient } from "../../infrastructure/telegram/telegram-client.js";
+import type {
+  MonitorDispatchCommand,
+  MonitorDispatchTargetState,
+  MonitorDispatchTargetView,
+} from "./rich-message-builder.js";
 import {
   buildAirRichMessage,
   buildErrorRichMessage,
   buildHelpRichMessage,
   buildManualMonitorRichMessage,
-  buildMonitorDispatchResultRichMessage,
+  buildMonitorDispatchProgressRichMessage,
   buildPingRichMessage,
   buildSystemRichMessage,
   buildVersionRichMessage,
@@ -253,6 +258,7 @@ async function sendManualMonitorMessage(
     return undefined;
   }
 
+  const progress = await startMonitorDispatchProgress(ctx, "notify", client, config, logger);
   const message = buildManualMonitorRichMessage(text, senderLabel(ctx), config.app.timezone);
   const dispatch = await dispatchToMonitorTargets(
     message,
@@ -260,21 +266,18 @@ async function sendManualMonitorMessage(
     config,
     logger,
     "manual monitor notification",
+    async (targetStatuses) => {
+      await progress?.update(targetStatuses);
+    },
   );
 
-  await sendToContext(
-    ctx,
-    client,
-    buildMonitorDispatchResultRichMessage(
-      dispatch.sentCount,
-      dispatch.totalCount,
-      dispatch.failedTargets,
-    ),
-  );
+  await finishMonitorDispatchProgress(ctx, client, "notify", progress, dispatch, logger);
   return {
     command: "notify",
     at: new Date().toISOString(),
-    ...dispatch,
+    sentCount: dispatch.sentCount,
+    totalCount: dispatch.totalCount,
+    failedTargets: dispatch.failedTargets,
   };
 }
 
@@ -290,16 +293,22 @@ async function sendAirToMonitor(
     return undefined;
   }
 
+  const progress = await startMonitorDispatchProgress(ctx, "notifyair", client, config, logger);
   let result: Awaited<ReturnType<WaterCache["get"]>>;
   try {
     result = await cache.get();
   } catch (error) {
     logger.error("telegram.manual_air.error", "manual air message could not be prepared", error);
-    await sendToContext(
-      ctx,
-      client,
-      buildErrorRichMessage("Data belum tersedia", "Sumber data sedang tidak dapat diakses."),
-    );
+    const skippedTargets = buildMonitorDispatchTargetViews(config.monitor.targets, "skipped");
+    if (progress) {
+      await progress.fail(skippedTargets, "Data belum tersedia; pesan monitor tidak dikirim.");
+    } else {
+      await sendToContext(
+        ctx,
+        client,
+        buildErrorRichMessage("Data belum tersedia", "Sumber data sedang tidak dapat diakses."),
+      );
+    }
     return undefined;
   }
 
@@ -316,20 +325,17 @@ async function sendAirToMonitor(
     config,
     logger,
     "manual air notification",
+    async (targetStatuses) => {
+      await progress?.update(targetStatuses);
+    },
   );
-  await sendToContext(
-    ctx,
-    client,
-    buildMonitorDispatchResultRichMessage(
-      dispatch.sentCount,
-      dispatch.totalCount,
-      dispatch.failedTargets,
-    ),
-  );
+  await finishMonitorDispatchProgress(ctx, client, "notifyair", progress, dispatch, logger);
   return {
     command: "notifyair",
     at: new Date().toISOString(),
-    ...dispatch,
+    sentCount: dispatch.sentCount,
+    totalCount: dispatch.totalCount,
+    failedTargets: dispatch.failedTargets,
   };
 }
 
@@ -337,6 +343,150 @@ interface MonitorDispatchResult {
   sentCount: number;
   totalCount: number;
   failedTargets: string[];
+  targetStatuses: MonitorDispatchTargetView[];
+}
+
+interface MonitorDispatchProgressController {
+  update(targetStatuses: readonly MonitorDispatchTargetView[]): Promise<void>;
+  finish(targetStatuses: readonly MonitorDispatchTargetView[]): Promise<void>;
+  fail(targetStatuses: readonly MonitorDispatchTargetView[], note: string): Promise<void>;
+}
+
+function buildMonitorDispatchTargetViews(
+  targets: AppConfig["monitor"]["targets"],
+  state: MonitorDispatchTargetState,
+): MonitorDispatchTargetView[] {
+  return targets.map((target) => ({
+    label: target.label,
+    chatId: target.chatId,
+    ...(target.threadId === undefined ? {} : { threadId: target.threadId }),
+    state,
+  }));
+}
+
+async function startMonitorDispatchProgress(
+  ctx: Context,
+  command: MonitorDispatchCommand,
+  client: TelegramRichClient,
+  config: AppConfig,
+  logger: StructuredLogger,
+): Promise<MonitorDispatchProgressController | undefined> {
+  const initialTargets = buildMonitorDispatchTargetViews(config.monitor.targets, "pending");
+  let sentMessage: Awaited<ReturnType<TelegramRichClient["sendToChat"]>>;
+  try {
+    const message = await sendToContextMessage(
+      ctx,
+      client,
+      buildMonitorDispatchProgressRichMessage(command, initialTargets, "preparing"),
+    );
+    if (!message) return undefined;
+    sentMessage = message;
+  } catch (error) {
+    logger.warn(
+      "telegram.manual_dispatch.progress_send_failed",
+      "progress message could not be sent",
+      {
+        command: `/${command}`,
+        error_message: error instanceof Error ? error.message : String(error),
+      },
+    );
+    return undefined;
+  }
+
+  const location = { chatId: sentMessage.chat.id, messageId: sentMessage.message_id };
+  const render = async (
+    targetStatuses: readonly MonitorDispatchTargetView[],
+    phase: "sending" | "completed" | "failed",
+    note?: string,
+  ): Promise<boolean> => {
+    try {
+      await client.edit(
+        location,
+        buildMonitorDispatchProgressRichMessage(command, targetStatuses, phase, note),
+      );
+      return true;
+    } catch (error) {
+      logger.warn(
+        "telegram.manual_dispatch.progress_edit_failed",
+        "progress message could not be edited",
+        {
+          command: `/${command}`,
+          error_message: error instanceof Error ? error.message : String(error),
+        },
+      );
+      return false;
+    }
+  };
+
+  return {
+    update: async (targetStatuses) => {
+      await render(targetStatuses, "sending");
+    },
+    finish: async (targetStatuses) => {
+      const edited = await render(targetStatuses, "completed");
+      if (edited) return;
+      try {
+        await sendToContext(
+          ctx,
+          client,
+          buildMonitorDispatchProgressRichMessage(command, targetStatuses, "completed"),
+        );
+      } catch (error) {
+        logger.error(
+          "telegram.manual_dispatch.result_send_failed",
+          "final monitor dispatch report could not be sent",
+          error,
+          { command: `/${command}` },
+        );
+      }
+    },
+    fail: async (targetStatuses, note) => {
+      const edited = await render(targetStatuses, "failed", note);
+      if (edited) return;
+      try {
+        await sendToContext(
+          ctx,
+          client,
+          buildMonitorDispatchProgressRichMessage(command, targetStatuses, "failed", note),
+        );
+      } catch (error) {
+        logger.error(
+          "telegram.manual_dispatch.result_send_failed",
+          "failed monitor dispatch report could not be sent",
+          error,
+          { command: `/${command}` },
+        );
+      }
+    },
+  };
+}
+
+async function finishMonitorDispatchProgress(
+  ctx: Context,
+  client: TelegramRichClient,
+  command: MonitorDispatchCommand,
+  progress: MonitorDispatchProgressController | undefined,
+  dispatch: MonitorDispatchResult,
+  logger: StructuredLogger,
+): Promise<void> {
+  if (progress) {
+    await progress.finish(dispatch.targetStatuses);
+    return;
+  }
+  try {
+    await sendToContext(
+      ctx,
+      client,
+      buildMonitorDispatchProgressRichMessage(command, dispatch.targetStatuses, "completed"),
+    );
+  } catch (error) {
+    logger.error(
+      "telegram.manual_dispatch.result_send_failed",
+      "monitor dispatch report could not be sent",
+      error,
+      { command: `/${command}`, target_count: dispatch.totalCount },
+    );
+  }
 }
 
 async function dispatchToMonitorTargets(
@@ -345,15 +495,21 @@ async function dispatchToMonitorTargets(
   config: AppConfig,
   logger: StructuredLogger,
   operationName: string,
+  onProgress?: (targetStatuses: readonly MonitorDispatchTargetView[]) => Promise<void>,
 ): Promise<MonitorDispatchResult> {
   let sentCount = 0;
   const failedTargets: string[] = [];
-  for (const target of config.monitor.targets) {
+  const targetStatuses = buildMonitorDispatchTargetViews(config.monitor.targets, "pending");
+  for (const [index, target] of config.monitor.targets.entries()) {
+    const targetStatus = targetStatuses[index];
+    if (!targetStatus) continue;
     const targetFields = {
       target: target.label,
       chat_id: target.chatId,
       thread_id: target.threadId,
     };
+    targetStatus.state = "sending";
+    await reportDispatchProgress(targetStatuses, onProgress, logger, operationName);
     try {
       await withRetry(() => client.send(target, message), {
         operation: `${operationName} ${target.label}`,
@@ -362,19 +518,51 @@ async function dispatchToMonitorTargets(
         onRetry: retryLogger(logger, `${operationName} ${target.label}`, targetFields),
       });
       sentCount += 1;
+      targetStatus.state = "sent";
       logger.info("telegram.manual_dispatch.success", "manual monitor message sent", {
         operation: operationName,
         ...targetFields,
       });
     } catch (error) {
       failedTargets.push(target.label);
+      targetStatus.state = "failed";
+      targetStatus.errorMessage = compactErrorMessage(error);
       logger.error("telegram.manual_dispatch.error", "manual monitor message failed", error, {
         operation: operationName,
         ...targetFields,
       });
     }
+    await reportDispatchProgress(targetStatuses, onProgress, logger, operationName);
   }
-  return { sentCount, totalCount: config.monitor.targets.length, failedTargets };
+  return {
+    sentCount,
+    totalCount: config.monitor.targets.length,
+    failedTargets,
+    targetStatuses,
+  };
+}
+
+async function reportDispatchProgress(
+  targetStatuses: readonly MonitorDispatchTargetView[],
+  onProgress: ((targetStatuses: readonly MonitorDispatchTargetView[]) => Promise<void>) | undefined,
+  logger: StructuredLogger,
+  operationName: string,
+): Promise<void> {
+  if (!onProgress) return;
+  try {
+    await onProgress(targetStatuses.map((target) => ({ ...target })));
+  } catch (error) {
+    logger.warn("telegram.manual_dispatch.progress_callback_failed", "progress update failed", {
+      operation: operationName,
+      error_message: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
+function compactErrorMessage(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  const compact = message.replace(/\s+/g, " ").trim();
+  return compact.length > 240 ? `${compact.slice(0, 237)}…` : compact;
 }
 
 async function sendNoMonitorTargetError(
@@ -399,8 +587,16 @@ async function sendToContext(
   client: TelegramRichClient,
   message: Parameters<TelegramRichClient["sendToChat"]>[1],
 ): Promise<void> {
-  if (!ctx.chat) return;
-  await client.sendToChat(ctx.chat.id, message, ctx.message?.message_thread_id);
+  await sendToContextMessage(ctx, client, message);
+}
+
+async function sendToContextMessage(
+  ctx: Context,
+  client: TelegramRichClient,
+  message: Parameters<TelegramRichClient["sendToChat"]>[1],
+): Promise<Awaited<ReturnType<TelegramRichClient["sendToChat"]>> | undefined> {
+  if (!ctx.chat) return undefined;
+  return client.sendToChat(ctx.chat.id, message, ctx.message?.message_thread_id);
 }
 
 function allowCommand(

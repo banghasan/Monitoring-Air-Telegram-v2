@@ -4,6 +4,7 @@ import {
   buildAirRichMessage,
   buildHelpRichMessage,
   buildManualMonitorRichMessage,
+  buildMonitorDispatchProgressRichMessage,
   buildPingRichMessage,
   buildVersionRichMessage,
 } from "../../src/interfaces/telegram/rich-message-builder.js";
@@ -181,4 +182,43 @@ test("pesan manual monitor memakai Rich Message dan waktu monospace", () => {
   expect(serialized).toContain("Uji notifikasi monitor");
   expect(serialized).toContain("Hasanudin H Syafaat (@hasanudinhs)");
   expect(serialized).toContain('"type":"code","text":"17 September 2026 18.35.00 WIB"');
+});
+
+test("progress notify menampilkan tujuan, ID target, thread, dan hasil setiap target", () => {
+  const preparing = JSON.stringify(
+    buildMonitorDispatchProgressRichMessage(
+      "notify",
+      [
+        { label: "Monitoring", chatId: -1004431127445, threadId: 5, state: "pending" },
+        { label: "Channel", chatId: -1003861660503, state: "pending" },
+      ],
+      "preparing",
+    ),
+  );
+  expect(preparing).toContain("akan dikirim ke");
+  expect(preparing).toContain('"type":"code","text":"-1004431127445"');
+  expect(preparing).toContain('"type":"code","text":"5"');
+  expect(preparing).toContain('"type":"code","text":"-1003861660503"');
+
+  const completed = JSON.stringify(
+    buildMonitorDispatchProgressRichMessage(
+      "notifyair",
+      [
+        { label: "Monitoring", chatId: -1004431127445, threadId: 5, state: "sent" },
+        {
+          label: "Channel",
+          chatId: -1003861660503,
+          state: "failed",
+          errorMessage: "chat not found",
+        },
+      ],
+      "completed",
+    ),
+  );
+  expect(completed).toContain("⚠️ SEBAGIAN TERKIRIM");
+  expect(completed).toContain("📡 Hasil:");
+  expect(completed).toContain("Berhasil");
+  expect(completed).toContain("Gagal");
+  expect(completed).toContain("chat not found");
+  expect(completed).toContain("thread_id");
 });

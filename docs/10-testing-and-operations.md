@@ -50,6 +50,10 @@ Aturan detail tentang fixture, isolasi unit test, `bun test`, lint, type-check, 
 - `/start` dan `/help` menampilkan informasi pengembang serta button grup diskusi `@botindonesia`.
 - `/notify <pesan>` hanya dapat dijalankan owner/admin dan mengirim ke semua target pada `MONITOR_TARGETS_JSON`; thread ID hanya diteruskan untuk target yang mengaturnya.
 - `/notifyair` hanya dapat dijalankan owner/admin dan mengirim snapshot Rich Message yang sama dengan `/air` ke target monitor.
+- `/notify` dan `/notifyair` lebih dahulu mengirim pesan progres ke chat asal, lalu mengedit pesan yang sama setelah target diproses.
+- Pesan akhir menampilkan ringkasan dan rincian setiap target: label, `chat_id`, `thread_id` bila ada, status, dan error ringkas bila gagal.
+- Kegagalan edit progres tidak menghentikan pengiriman; bot mencoba laporan akhir baru dan mencatat fallback pada log.
+- `/notifyair` mengubah progres menjadi dibatalkan/dilewati jika cache tidak dapat disiapkan sebelum pengiriman.
 - User biasa tidak dapat memicu `/notify` atau `/notifyair`; keduanya tidak masuk menu command publik.
 - `/start` dan `/help` user biasa tidak menampilkan command admin, sedangkan owner/admin melihat bagian command internal.
 - `/system` menampilkan ringkasan hasil `/notify` atau `/notifyair` terakhir selama process bot aktif tanpa menyimpan isi pesannya.

@@ -26,7 +26,7 @@ Semua pesan yang dikirim bot menggunakan Telegram Rich Message. Tidak ada penggu
 | `/notify <pesan>` | Owner/admin | Mengirim pesan Rich Message manual ke semua target monitor pada `MONITOR_TARGETS_JSON`. |
 | `/notifyair` | Owner/admin | Mengambil snapshot yang sama dengan `/air`, lalu mengirimkannya sebagai Rich Message ke semua target monitor. |
 
-Command admin untuk mengubah konfigurasi atau force refresh belum ditetapkan dan tidak boleh ditambahkan diam-diam. `/notify` hanya mengirim pesan manual, sedangkan `/notifyair` membaca cache/sumber sesuai alur `/air`; keduanya tidak mengubah konfigurasi atau state worker. Ringkasan pengiriman terakhir tersedia di `/system` selama process bot belum restart.
+Command admin untuk mengubah konfigurasi atau force refresh belum ditetapkan dan tidak boleh ditambahkan diam-diam. `/notify` hanya mengirim pesan manual, sedangkan `/notifyair` membaca cache/sumber sesuai alur `/air`; keduanya tidak mengubah konfigurasi atau state worker. Saat dijalankan, keduanya mengirim pesan progres ke chat asal, mengeditnya sepanjang pengiriman, dan menutupnya dengan laporan per target. Ringkasan pengiriman terakhir tersedia di `/system` selama process bot belum restart.
 
 ## Tampilan `/air`
 

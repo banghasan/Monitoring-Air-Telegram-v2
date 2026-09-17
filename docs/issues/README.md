@@ -9,6 +9,7 @@ Folder ini berisi risiko implementasi, keputusan kompatibilitas, dan catatan val
 - [003 — Thread dan tipe target Telegram](./003-telegram-thread-targets.md) — **Resolved**
 - [004 — Satu worker dan duplicate notification](./004-monitor-worker-duplication.md) — **Resolved**
 - [005 — Detail kebijakan notifikasi](./005-monitor-notification-policy.md) — **Resolved**
+- [006 — Progres command notifikasi manual](./006-manual-notification-progress.md) — **Resolved**
 
 ## Cara membaca status
 

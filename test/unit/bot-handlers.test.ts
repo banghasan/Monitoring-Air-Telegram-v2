@@ -94,6 +94,7 @@ test("/notify hanya owner/admin yang dapat mengirim pesan ke target monitor", as
   });
   const monitorMessages: unknown[] = [];
   const replies: unknown[] = [];
+  const progressEdits: unknown[] = [];
   const client = {
     send: async (_target: unknown, message: unknown) => {
       monitorMessages.push(message);
@@ -106,6 +107,9 @@ test("/notify hanya owner/admin yang dapat mengirim pesan ke target monitor", as
         date: 1,
         rich_message: message,
       };
+    },
+    edit: async (_location: unknown, message: unknown) => {
+      progressEdits.push(message);
     },
   } as unknown as TelegramRichClient;
   const config = parseConfig({
@@ -145,8 +149,12 @@ test("/notify hanya owner/admin yang dapat mengirim pesan ke target monitor", as
   expect(monitorMessages).toHaveLength(2);
   expect(JSON.stringify(monitorMessages[0])).toContain("Uji notifikasi monitor");
   expect(JSON.stringify(monitorMessages[1])).toContain("Uji notifikasi admin");
-  expect(JSON.stringify(replies[0])).toContain("✅ TERKIRIM KE MONITOR");
-  expect(JSON.stringify(replies[1])).toContain("✅ TERKIRIM KE MONITOR");
+  expect(JSON.stringify(replies[0])).toContain("akan dikirim ke");
+  expect(JSON.stringify(replies[0])).toContain("-100123");
+  expect(JSON.stringify(progressEdits[2])).toContain("✅ TERKIRIM KE MONITOR");
+  expect(JSON.stringify(progressEdits[2])).toContain("chat_id");
+  expect(JSON.stringify(progressEdits[2])).toContain("thread_id");
+  expect(progressEdits).toHaveLength(6);
   expect(JSON.stringify(replies[2])).toContain("📤 /notify terakhir: 1/1 target");
   expect(replies).toHaveLength(3);
 });
@@ -171,6 +179,7 @@ test("/notifyair mengirim snapshot /air ke monitor dan help admin bersifat kondi
   });
   const monitorMessages: unknown[] = [];
   const replies: unknown[] = [];
+  const progressEdits: unknown[] = [];
   const client = {
     send: async (target: unknown, message: unknown) => {
       monitorMessages.push({ target, message });
@@ -183,6 +192,9 @@ test("/notifyair mengirim snapshot /air ke monitor dan help admin bersifat kondi
         date: 1,
         rich_message: message,
       };
+    },
+    edit: async (_location: unknown, message: unknown) => {
+      progressEdits.push(message);
     },
   } as unknown as TelegramRichClient;
   const config = parseConfig({
@@ -251,6 +263,8 @@ test("/notifyair mengirim snapshot /air ke monitor dan help admin bersifat kondi
   expect(monitorMessages).toHaveLength(1);
   expect(JSON.stringify(monitorMessages[0])).toContain("🌊 PEMANTAUAN TINGGI MUKA AIR (TMA)");
   expect(JSON.stringify(monitorMessages[0])).toContain("callback_data");
-  expect(JSON.stringify(replies[2])).toContain("✅ TERKIRIM KE MONITOR");
+  expect(JSON.stringify(replies[2])).toContain("akan dikirim ke");
+  expect(JSON.stringify(progressEdits.at(-1))).toContain("✅ TERKIRIM KE MONITOR");
+  expect(JSON.stringify(progressEdits.at(-1))).toContain("chat_id");
   expect(JSON.stringify(replies[3])).toContain("📤 /notifyair terakhir: 1/1 target");
 });

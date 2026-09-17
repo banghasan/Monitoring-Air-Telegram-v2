@@ -52,6 +52,12 @@ Pengiriman boleh dibatasi concurrency-nya agar satu event tidak membebani Telegr
 
 Kedua command hanya tersedia secara fungsional untuk `TELEGRAM_OWNER_ID` dan `TELEGRAM_ADMIN_IDS`. Kegagalan dicatat per target dalam log JSON dan diringkas pada `/system`; tidak ada broadcast error ke target monitor.
 
+### Progres pengiriman manual
+
+Command manual memakai satu pesan progres di chat asal. Pesan awal dikirim sebelum target monitor diproses dan menyatakan tujuan pengiriman. Rincian target menampilkan label, `chat_id`, dan `thread_id` jika ada. Pengiriman target berjalan berurutan dengan state `Menunggu` → `Mengirim` → `Berhasil` atau `Gagal`. Setiap perubahan state mengedit pesan progres yang sama, kemudian edit terakhir menampilkan ringkasan dan hasil tiap target.
+
+Jika edit tidak berhasil, proses pengiriman tetap berjalan dan bot mencoba mengirim laporan akhir sebagai pesan baru. Kegagalan edit hanya dicatat pada log JSON. Error tujuan tidak pernah dikirim sebagai notifikasi ke target monitor lain.
+
 Pada `/start` dan `/help`, informasi ketiga command internal (`/system`, `/notify`, dan `/notifyair`) hanya muncul untuk user owner/admin. Menu command publik tetap tidak memuat command internal.
 
 ## `/system`
