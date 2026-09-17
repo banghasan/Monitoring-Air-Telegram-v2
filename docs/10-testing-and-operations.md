@@ -43,6 +43,8 @@ Aturan detail tentang fixture, isolasi unit test, `bun test`, lint, type-check, 
 - URL sumber dan URL peta tidak tampil sebagai teks mentah.
 - Status utama hanya memakai emoji status, misalnya `🟢 Status : Normal`, tanpa emoji dekoratif tambahan.
 - `/ping` menampilkan durasi proses.
+- `/version`, `/ver`, dan `/versi` menampilkan versi aplikasi.
+- `/start` dan `/help` menampilkan informasi pengembang serta button grup diskusi `@botindonesia`.
 
 ## Monitoring worker
 

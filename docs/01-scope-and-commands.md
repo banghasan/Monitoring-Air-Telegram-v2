@@ -14,6 +14,7 @@ Semua pesan yang dikirim bot menggunakan Telegram Rich Message. Tidak ada penggu
 | --- | --- | --- |
 | `/air` | Publik | Menampilkan data TMA Angke Hulu dalam Rich Message. |
 | `/ping` | Publik | Menampilkan respons bot dan waktu proses dalam milidetik/detik. |
+| `/version`, `/ver`, `/versi` | Publik | Menampilkan versi bot. Ketiganya memiliki respons yang sama. |
 | `/start` | Publik | Menampilkan informasi awal bot dan bantuan singkat. |
 | `/help` | Publik | Menampilkan daftar command dan bantuan bot. |
 
@@ -73,6 +74,21 @@ Contoh:
 ```
 
 Pengukuran tidak perlu mengambil data air. Tujuannya adalah mengetahui apakah process bot merespons.
+
+## `/version`, `/ver`, `/versi`
+
+Ketiga command adalah alias publik yang menampilkan versi aplikasi bot dalam Rich Message. Menu command Telegram juga didaftarkan saat bot mulai.
+
+## Tampilan `/start` dan `/help`
+
+Pesan pembuka menjelaskan fungsi bot, sumber data, daftar perintah, pengembang, serta menyediakan button Rich Message menuju grup diskusi Telegram `@botindonesia`. Informasi pengembang yang ditampilkan:
+
+```text
+Hasanudin H Syafaat
+@hasanudinhs · banghasan.com
+```
+
+`@hasanudinhs` dan `banghasan.com` menjadi inline link. Button `💬 Grup Diskusi @botindonesia` membuka `https://t.me/botindonesia`.
 
 ## Summary yang dapat dibuka
 

@@ -6,6 +6,7 @@ import type { StructuredLogger } from "../../infrastructure/logging/structured-l
 import { XmlWaterSource } from "../../infrastructure/source/xml-water-source.js";
 import { TelegramRichClient } from "../../infrastructure/telegram/telegram-client.js";
 import { createBotHttpServer } from "../../interfaces/http/runtime-server.js";
+import { PUBLIC_BOT_COMMANDS } from "../../interfaces/telegram/bot-commands.js";
 import { installBotHandlers } from "../../interfaces/telegram/bot-handlers.js";
 
 export async function startBot(config: AppConfig, logger: StructuredLogger): Promise<void> {
@@ -58,6 +59,7 @@ export async function startBot(config: AppConfig, logger: StructuredLogger): Pro
     port: config.app.port,
     mode: config.telegram.mode,
   });
+  await configureBotCommands(bot, logger);
 
   const shutdown = (): void => {
     clearInterval(cacheInterval);
@@ -85,5 +87,22 @@ export async function startBot(config: AppConfig, logger: StructuredLogger): Pro
     logger.info("telegram.webhook.started", "telegram webhook configured", {
       url: config.telegram.webhookUrl,
     });
+  }
+}
+
+async function configureBotCommands(bot: Bot, logger: StructuredLogger): Promise<void> {
+  try {
+    await bot.api.setMyCommands(PUBLIC_BOT_COMMANDS);
+    logger.info("telegram.commands.configured", "telegram command menu configured", {
+      command_count: PUBLIC_BOT_COMMANDS.length,
+    });
+  } catch (error) {
+    logger.warn(
+      "telegram.commands.configure_failed",
+      "telegram command menu configuration failed",
+      {
+        error_message: error instanceof Error ? error.message : String(error),
+      },
+    );
   }
 }

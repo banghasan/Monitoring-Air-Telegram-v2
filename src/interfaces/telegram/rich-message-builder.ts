@@ -140,16 +140,51 @@ export function buildAirNotificationRichMessage(
   return { blocks };
 }
 
-export function buildHelpRichMessage(): InputRichMessage {
+export function buildHelpRichMessage(
+  sourceUrl = "https://poskobanjir.dsdadki.web.id/xmldata.xml",
+): InputRichMessage {
   return {
     blocks: [
       { type: "heading", size: 2, text: "🌊 Bot Pemantauan Air" },
-      paragraph("Pemantauan tinggi muka air Angke Hulu dari Posko Banjir DKI Jakarta."),
+      paragraph([
+        "Menyediakan informasi Tinggi Muka Air (TMA) P.S. Angke Hulu dari ",
+        linkedText("Posko Banjir DKI Jakarta", sourceUrl),
+        ".",
+      ]),
       divider(),
+      paragraph("📚 Perintah"),
       paragraph("/air — cek tinggi muka air Angke Hulu"),
       paragraph("/ping — cek respons bot dan waktu proses"),
+      paragraph("/version, /ver, atau /versi — informasi versi bot"),
       paragraph("/start atau /help — tampilkan bantuan ini"),
-      paragraph("🔐 /system — informasi sistem (khusus owner/admin)"),
+      paragraph("🔒 /system — informasi sistem (khusus owner/admin)"),
+      divider(),
+      paragraph("👨‍💻 Pengembang"),
+      paragraph([
+        "Hasanudin H Syafaat\n",
+        linkedText("@hasanudinhs", "https://t.me/hasanudinhs"),
+        " · ",
+        linkedText("banghasan.com", "https://banghasan.com"),
+      ]),
+      {
+        type: "buttons",
+        buttons: [
+          {
+            text: "💬 Grup Diskusi @botindonesia",
+            style: "link",
+            url: "https://t.me/botindonesia",
+          },
+        ],
+      },
+    ],
+  };
+}
+
+export function buildVersionRichMessage(version: string): InputRichMessage {
+  return {
+    blocks: [
+      { type: "heading", size: 2, text: "📦 VERSI BOT" },
+      paragraph(`🏷️ Versi aplikasi: ${version}`),
     ],
   };
 }

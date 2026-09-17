@@ -10,6 +10,7 @@ import {
   buildHelpRichMessage,
   buildPingRichMessage,
   buildSystemRichMessage,
+  buildVersionRichMessage,
   REFRESH_CALLBACK,
 } from "./rich-message-builder.js";
 
@@ -37,9 +38,15 @@ export function installBotHandlers(options: BotHandlersOptions): void {
     await sendToContext(ctx, client, message);
   });
 
+  const versionHandler = async (ctx: Context) => {
+    if (!allowCommand(ctx, cooldowns, config.publicCommandCooldownSeconds)) return;
+    await sendToContext(ctx, client, buildVersionRichMessage(config.app.version));
+  };
+  bot.command(["version", "ver", "versi"], versionHandler);
+
   const helpHandler = async (ctx: Context) => {
     if (!allowCommand(ctx, cooldowns, config.publicCommandCooldownSeconds)) return;
-    await sendToContext(ctx, client, buildHelpRichMessage());
+    await sendToContext(ctx, client, buildHelpRichMessage(config.water.sourceUrl));
   };
   bot.command("start", helpHandler);
   bot.command("help", helpHandler);

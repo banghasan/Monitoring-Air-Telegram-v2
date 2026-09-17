@@ -3,6 +3,7 @@ import type { WaterReading } from "../../src/domain/water/types.js";
 import {
   buildAirRichMessage,
   buildHelpRichMessage,
+  buildVersionRichMessage,
 } from "../../src/interfaces/telegram/rich-message-builder.js";
 
 const reading: WaterReading = {
@@ -97,7 +98,30 @@ test("air message tidak membuat link peta jika koordinat tidak tersedia", () => 
 });
 
 test("help juga dikirim sebagai Rich Message", () => {
-  const message = buildHelpRichMessage();
+  const message = buildHelpRichMessage(reading.sourceUrl);
   expect(message.blocks?.some((block) => block.type === "heading")).toBe(true);
-  expect(JSON.stringify(message)).toContain("/system");
+  const serialized = JSON.stringify(message);
+  expect(serialized).toContain("/system");
+  expect(serialized).toContain("/version, /ver, atau /versi");
+  expect(serialized).toContain("Hasanudin H Syafaat");
+  expect(serialized).toContain("@hasanudinhs");
+  expect(serialized).toContain("banghasan.com");
+  expect(serialized).toContain("@botindonesia");
+  const buttons = message.blocks?.find((block) => block.type === "buttons");
+  expect(buttons?.type).toBe("buttons");
+  if (buttons?.type === "buttons") {
+    expect(buttons.buttons).toEqual([
+      {
+        text: "💬 Grup Diskusi @botindonesia",
+        style: "link",
+        url: "https://t.me/botindonesia",
+      },
+    ]);
+  }
+});
+
+test("version message menampilkan versi aplikasi", () => {
+  const message = buildVersionRichMessage("1.2.3");
+  expect(JSON.stringify(message)).toContain("📦 VERSI BOT");
+  expect(JSON.stringify(message)).toContain("🏷️ Versi aplikasi: 1.2.3");
 });

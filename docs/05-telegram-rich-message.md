@@ -17,6 +17,8 @@ Semua output bot menggunakan Rich Message:
 
 - `/air` memakai Rich Message;
 - `/ping` memakai Rich Message;
+- `/version`, `/ver`, dan `/versi` memakai Rich Message;
+- `/start` dan `/help` menyertakan informasi pengembang serta button Rich Message grup diskusi;
 - `/start` dan `/help` memakai Rich Message;
 - button diletakkan sebagai block/button Rich Message;
 - tidak memakai `reply_markup` inline keyboard terpisah untuk UI utama.
