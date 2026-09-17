@@ -118,7 +118,7 @@ Secret tidak ditulis ke YAML Compose atau image. `INTERNAL_STATUS_TOKEN` boleh b
 
 ## Alur deploy manual
 
-1. Jalankan GitHub Action Docker secara manual dengan `push=true`.
+1. Jalankan GitHub Action Docker secara manual. Workflow akan otomatis login dan push image ke GHCR.
 2. Pastikan tag image berhasil tersedia di GHCR.
 3. Set `IMAGE_TAG` pada environment host atau gunakan default `latest`.
 4. Salin `.env.example` menjadi `.env`, isi secret, atau gunakan `ENV_FILE` untuk menunjuk file env lain.

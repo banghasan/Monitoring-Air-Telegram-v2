@@ -71,6 +71,8 @@ Contoh Compose yang memuat environment dari host dan memakai image GHCR tersedia
 
 GitHub Action [`.github/workflows/docker-build.yml`](./.github/workflows/docker-build.yml) hanya berjalan manual melalui `workflow_dispatch`. Nama image mengikuti repository GitHub yang dinormalisasi lowercase:
 
+Setiap eksekusi workflow akan otomatis mem-publish image ke GHCR dengan tag yang dimasukkan pada `image_tag` serta tag commit SHA.
+
 ```text
 ghcr.io/banghasan/monitoring-air-telegram-v2:<tag>
 ```
