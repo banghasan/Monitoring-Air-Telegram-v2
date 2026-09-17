@@ -1,21 +1,21 @@
 # Notifikasi Perubahan
 
-## Kapan mengirim
+## Pemicu notifikasi
 
-Worker tidak mengirim pesan setiap kali interval selesai. Worker mengirim hanya jika terjadi perubahan relevan sejak state terakhir.
+Keputusan: worker hanya mengirim broadcast ketika `STATUS_SIAGA` berubah.
 
-Perubahan relevan meliputi:
+Worker tidak mengirim pesan hanya karena:
 
-- `TINGGI_AIR` berubah;
+- `TINGGI_AIR` berubah tetapi status siaga tetap sama;
 - `TINGGI_AIR_SEBELUMNYA` berubah;
-- `STATUS_SIAGA` berubah;
-- threshold `SIAGA1` sampai `SIAGA4` berubah;
-- record sumber yang terpilih berubah;
-- source observation baru memiliki perubahan nilai yang perlu diinformasikan.
+- threshold `SIAGA1` sampai `SIAGA4` berubah tanpa perubahan status;
+- `TANGGAL` berubah tetapi status tetap sama.
 
-`STATUS_SIAGA` adalah perubahan paling penting. Jika status berubah, notifikasi harus tetap dikirim walaupun perubahan tinggi air kecil.
+Perubahan tinggi air, arah, threshold, dan timestamp tetap ditampilkan oleh `/air` dan dapat dicatat untuk `/system`, tetapi bukan pemicu broadcast monitoring.
 
-Jika hanya `TANGGAL` berubah tetapi seluruh nilai penting sama, default-nya tidak mengirim broadcast baru; kondisi tersebut cukup dicatat sebagai observation update. Keputusan ini mencegah group menerima pesan yang sama setiap refresh sumber.
+Perbandingan status memakai nilai yang sudah dinormalisasi untuk menghindari notifikasi palsu karena perbedaan spasi/huruf besar-kecil. Nilai asli `STATUS_SIAGA` tetap dipertahankan untuk tampilan pesan.
+
+Jika status berubah, notifikasi dikirim walaupun perubahan tinggi air kecil. Jika status berubah kembali, misalnya `Normal → Siaga 3 → Normal`, setiap transisi adalah event baru.
 
 ## Perbandingan arah
 
@@ -41,15 +41,24 @@ Notifikasi dikirim sebagai Rich Message:
   ├ 🌊 <TINGGI_AIR mentah> <📈 Naik / 📉 Turun / ➡️ Tetap>
   └ 🚦 Status: <STATUS_SIAGA>
 
-📣 Perubahan:
-  ├ <nilai sebelumnya → nilai sekarang>
-  └ <status lama → status baru bila berubah>
+📣 Perubahan status:
+  └ <status lama> → <status baru>
+
+🌊 Pembacaan saat perubahan:
+  ├ Ketinggian: <TINGGI_AIR mentah>
+  └ Arah: <📈 Naik / 📉 Turun / ➡️ Tetap>
 
 ▸ 📋 Keterangan
 ▸ 🧭 Legenda
 ```
 
 Status siaga ditampilkan pada bagian utama, bukan hanya di dalam summary, karena merupakan informasi prioritas monitoring.
+
+## Baseline pertama dan restart
+
+Keputusan: pembacaan valid pertama hanya disimpan sebagai baseline dan tidak langsung dikirim ke semua target. Ini mencegah worker baru atau container restart mengirim notifikasi palsu.
+
+Broadcast pertama dikirim ketika pembacaan berikutnya menunjukkan perubahan status. Jika state lama tidak tersedia, `/system` perlu menunjukkan bahwa worker sedang membuat baseline.
 
 ## Status sumber gagal
 
@@ -61,7 +70,7 @@ Jika fetch gagal:
 - gunakan retry pada siklus berikutnya;
 - jangan mengirim pesan error ke semua target pada setiap menit.
 
-Notifikasi error ke target dapat ditambahkan kemudian dengan deduplication dan cooldown terpisah.
+Notifikasi error ke target tidak menjadi bagian dari pemicu status siaga dan tidak dikirim pada MVP. Detail error hanya tersedia pada log JSON dan `/system`.
 
 ## Target gagal
 

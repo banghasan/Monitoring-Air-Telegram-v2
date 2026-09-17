@@ -45,7 +45,7 @@ Untuk build lokal setelah source aplikasi tersedia:
 ```bash
 docker build \
   --build-arg BUN_VERSION="$(tr -d '[:space:]' < .bun-version)" \
-  -t air-pantauan:local .
+  -t monitoring-air-telegram-v2:local .
 ```
 
 ## GitHub Action
@@ -66,8 +66,18 @@ Nama image mengikuti repository GitHub secara otomatis:
 ghcr.io/<owner>/<repository>:<tag>
 ```
 
+Repository saat ini:
+
+```text
+github.com/banghasan/Monitoring-Air-Telegram-v2
+```
+
+Nama image GHCR yang digunakan:
+
+```text
+ghcr.io/banghasan/monitoring-air-telegram-v2:<tag>
+```
+
 Workflow tidak memiliki trigger `push` atau `pull_request`, sehingga build tidak berjalan otomatis.
 
-## Catatan repository
-
-Remote Git belum terdaftar di workspace saat dokumentasi ini dibuat. Workflow memakai `${{ github.repository }}` sehingga nama image akan mengikuti repository sebenarnya ketika dijalankan di GitHub.
+Workflow memakai `${{ github.repository }}` dan menormalkan hasilnya menjadi lowercase sebelum dijadikan nama image.

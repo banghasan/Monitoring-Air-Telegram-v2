@@ -7,6 +7,7 @@ Folder ini berisi konsep dan keputusan arsitektur yang menjadi dasar implementas
 - [Monitoring worker](./11-monitoring-worker.md)
 - [Notifikasi perubahan](./12-monitoring-notifications.md)
 - [Target Telegram](./13-telegram-notification-targets.md)
+- [Structured logging](./14-structured-logging.md)
 
 Dokumen detail dasar yang sudah ada di folder induk:
 

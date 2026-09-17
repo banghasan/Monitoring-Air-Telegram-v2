@@ -22,6 +22,14 @@ File `.env.example` berisi nama variable dan contoh aman. File `.env` asli harus
 
 ## Image
 
+Nama image repository saat ini:
+
+```text
+ghcr.io/banghasan/monitoring-air-telegram-v2:<tag>
+```
+
+Workflow GitHub mengambil `${{ github.repository }}` secara dinamis lalu menormalkannya menjadi lowercase agar valid sebagai nama image Docker.
+
 Rancangan Dockerfile:
 
 - gunakan base image Bun yang versinya dipin;
@@ -48,9 +56,11 @@ Service `monitor` memakai image aplikasi yang sama, tetapi entrypoint/role berbe
 - tidak menjalankan polling update Telegram;
 - mengambil XML sesuai `MONITOR_INTERVAL_SECONDS`;
 - membandingkan snapshot sekarang dengan state terakhir;
-- mengirim Rich Message jika ada perubahan relevan;
+- mengirim Rich Message jika `STATUS_SIAGA` berubah;
 - mengirim ke semua target pada `MONITOR_TARGETS_JSON`;
 - menyimpan state minimal agar restart tidak otomatis menganggap data lama sebagai perubahan baru.
+
+Bot dan worker menulis log terstruktur ke console. Docker Compose tidak perlu menyimpan file log di dalam container; pengelolaan log dilakukan dari stdout/stderr melalui Docker logging driver atau platform deployment.
 
 Deployment awal sebaiknya hanya menjalankan satu replica `monitor`. Service bot dan monitor boleh berbagi source code/image, tetapi lifecycle dan health check-nya dipisahkan.
 

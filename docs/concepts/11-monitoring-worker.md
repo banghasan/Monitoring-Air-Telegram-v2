@@ -2,7 +2,7 @@
 
 ## Tujuan
 
-Worker memeriksa XML secara berkala dan mengirim notifikasi ke target Telegram jika ada perubahan data Angke Hulu. Worker tidak menerima update Telegram dan tidak menjalankan polling.
+Worker memeriksa XML secara berkala dan mengirim notifikasi ke target Telegram jika `STATUS_SIAGA` Angke Hulu berubah. Worker tidak menerima update Telegram dan tidak menjalankan polling.
 
 ## Service terpisah
 
@@ -55,7 +55,7 @@ Jika mode gabungan dipakai, harus ada satu flag role yang jelas. Bot tidak boleh
 
 ## State minimal
 
-Worker memerlukan state minimal, bukan histori penuh:
+Worker memerlukan state minimal yang persistent, bukan histori penuh:
 
 - fingerprint data terakhir yang sudah diproses;
 - `TANGGAL` observasi terakhir;
@@ -65,7 +65,7 @@ Worker memerlukan state minimal, bukan histori penuh:
 - waktu fetch terakhir;
 - hasil pengiriman per target bila diperlukan untuk retry.
 
-Cache memory saja cukup untuk satu process yang tidak pernah restart. Untuk notification reliability, state minimal perlu storage yang bertahan melewati restart.
+Keputusan: gunakan SQLite atau file state atomik pada named volume worker. SQLite menjadi pilihan utama jika state per target dan retry mulai bertambah. Cache memory saja tidak cukup karena state hilang ketika container restart.
 
 ## Aturan satu worker
 

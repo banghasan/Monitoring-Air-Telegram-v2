@@ -8,6 +8,7 @@ Folder ini berisi hal yang belum final, risiko implementasi, dan keputusan yang 
 - [002 — State worker monitoring](./002-monitor-worker-state.md)
 - [003 — Thread dan tipe target Telegram](./003-telegram-thread-targets.md)
 - [004 — Satu worker dan duplicate notification](./004-monitor-worker-duplication.md)
+- [005 — Detail kebijakan notifikasi](./005-monitor-notification-policy.md)
 
 ## Cara membaca status
 

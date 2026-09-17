@@ -1,6 +1,6 @@
 # Issue 002 — State Worker Monitoring
 
-Status: **Proposed**
+Status: **Resolved**
 
 ## Pertanyaan
 
@@ -12,9 +12,9 @@ Di mana worker menyimpan fingerprint dan snapshot terakhir agar restart tidak me
 2. **Redis** — cocok jika nanti worker lebih dari satu atau ada komponen lain yang membutuhkan state bersama.
 3. **Memory saja** — paling sederhana, tetapi state hilang ketika container restart.
 
-## Rekomendasi awal
+## Keputusan
 
-Gunakan persistent local state untuk satu worker jika notifikasi restart perlu konsisten. Tidak perlu menyimpan histori lengkap; cukup fingerprint terakhir, snapshot relevan, dan hasil kirim per target.
+Gunakan state persistent lokal pada named volume worker. SQLite menjadi pilihan utama; file state atomik hanya menjadi alternatif jika kebutuhan state tetap sederhana. Tidak perlu menyimpan histori lengkap; cukup fingerprint terakhir, snapshot relevan, dan hasil kirim per target.
 
 ## Dampak ke cache
 

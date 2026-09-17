@@ -48,6 +48,38 @@ Informasi yang tidak boleh ditampilkan:
 
 ## Logging
 
-Log boleh mencatat error fetch, status HTTP, durasi, dan status parsing. Token, secret, dan isi sensitif harus disensor.
+Log ditulis ke stdout/stderr sebagai JSON satu object per baris (NDJSON) agar dapat dibaca langsung melalui `docker logs` dan diproses dengan `jq` atau log collector.
+
+Field minimum yang disarankan:
+
+```json
+{
+  "ts": "2026-09-17T12:00:00.000Z",
+  "level": "info",
+  "service": "monitor",
+  "event": "monitor.status_changed",
+  "message": "water status changed",
+  "station_query": "Angke Hulu",
+  "source_name": "P.S. Angke Hulu 1",
+  "previous_status": "Status : Normal",
+  "current_status": "Status : Siaga 3",
+  "observed_at": "2026-09-17T18:00:00+07:00"
+}
+```
+
+Event penting yang perlu dicatat:
+
+- `app.start` dan `app.shutdown`;
+- `config.validated` atau `config.invalid`;
+- `source.fetch.start`, `source.fetch.success`, dan `source.fetch.error`;
+- `station.match` atau `station.ambiguous`;
+- `monitor.baseline`;
+- `monitor.status_changed`;
+- `notification.send.success` dan `notification.send.error` per target;
+- `worker.retry`.
+
+Log boleh mencatat error fetch, status HTTP, durasi, retry count, dan status parsing. Token, secret, authorization header, environment mentah, serta body XML penuh harus disensor/tidak dicatat.
+
+Kegagalan upstream atau target Telegram tidak dikirim sebagai broadcast ke pengguna. Informasinya cukup ada di log JSON dan ringkasan `/system`.
 
 Jika pencarian `Angke Hulu` menghasilkan lebih dari satu record, event tersebut menjadi warning penting dan dapat ditampilkan pada `/system`.

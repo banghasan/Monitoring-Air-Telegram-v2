@@ -68,3 +68,7 @@ Dokumen ini mendefinisikan checklist yang harus dipenuhi saat implementasi nanti
 - Polling hanya berjalan satu instance per token.
 - Shutdown menghentikan polling dan scheduler.
 - Error upstream terlihat pada log dan `/system`.
+- Setiap event log valid sebagai JSON satu baris.
+- `docker logs` dapat menampilkan error fetch dan target tanpa stack trace multiline yang merusak parser.
+- Tidak ada token, secret, atau XML penuh di log.
+- Kegagalan tidak menghasilkan notifikasi broadcast.

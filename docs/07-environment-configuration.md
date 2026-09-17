@@ -13,6 +13,7 @@ APP_VERSION=0.1.0
 PORT=3000
 TIMEZONE=Asia/Jakarta
 LOG_LEVEL=info
+LOG_FORMAT=json
 
 # Telegram
 TELEGRAM_BOT_TOKEN=replace-me

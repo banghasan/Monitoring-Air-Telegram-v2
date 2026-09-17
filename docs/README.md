@@ -44,8 +44,9 @@ Detail monitoring ada di [konsep monitoring worker](./concepts/11-monitoring-wor
 - `TINGGI_AIR` ditampilkan apa adanya dari sumber, termasuk tanda negatif; tidak dilakukan normalisasi nilai.
 - Deployment monitoring menggunakan worker terpisah dari bot polling.
 - Worker menjalankan pemeriksaan dengan interval yang dapat diatur melalui environment, default 60 detik.
-- Worker hanya mengirim notifikasi jika data relevan berubah, dengan informasi status siaga sebagai bagian utama.
+- Worker hanya mengirim notifikasi jika `STATUS_SIAGA` berubah, dengan informasi status siaga sebagai bagian utama.
 - Notifikasi dapat diarahkan ke banyak group/channel dan optional thread ID.
+- Log aplikasi ditulis ke console dalam format JSON satu object per baris agar mudah dibaca melalui `docker logs`.
 
 ## 1. Tujuan MVP
 
@@ -55,7 +56,7 @@ Bot diharapkan dapat:
 - mengambil data XML dari sumber resmi yang dikonfigurasi lewat environment variable;
 - menyimpan satu snapshot data di cache memory aplikasi;
 - menjalankan worker monitoring dengan interval yang dapat diatur;
-- mengirim notifikasi Rich Message ketika data relevan berubah;
+- mengirim notifikasi Rich Message ketika `STATUS_SIAGA` berubah;
 - mengirim notifikasi ke beberapa group/channel dan optional thread ID;
 - berjalan dengan mode Telegram **polling** atau **webhook**;
 - dijalankan sebagai satu container Docker melalui Docker Compose;
@@ -269,6 +270,7 @@ Catatan konfigurasi:
 - `TELEGRAM_MODE=webhook` wajib memiliki `TELEGRAM_WEBHOOK_URL` dan secret.
 - Bot bersifat publik. `TELEGRAM_OWNER_ID` dan `TELEGRAM_ADMIN_IDS` hanya menentukan akses ke command informasi sistem/admin.
 - Status worker, interval, fetch terakhir, dan ringkasan target notifikasi dapat dilihat owner/admin melalui `/system`.
+- Kegagalan upstream dan target tidak dikirim sebagai notifikasi; detailnya tersedia di log JSON dan ringkasan `/system`.
 - `WATER_STATION_QUERY` menjadi selector utama dan dicocokkan pada `NAMA_PINTU_AIR` setelah normalisasi.
 - `WATER_STATION_DISPLAY_NAME` hanya untuk tampilan pengguna; selector tetap `Angke Hulu`.
 - nilai duration perlu divalidasi sebagai integer positif saat startup.
@@ -349,6 +351,7 @@ Jika sumber gagal, log boleh memuat URL dan HTTP status, tetapi jangan mencetak 
 - Perlakukan XML yang tidak lengkap, record tidak ditemukan, nilai numerik kosong, dan status HTTP non-2xx sebagai error yang dapat ditangani.
 - Jangan mengubah `TINGGI_AIR` menjadi kesimpulan bahaya tanpa definisi satuan dan aturan ambang yang telah dikonfirmasi.
 - Saat cache stale, labeli hasilnya secara eksplisit.
+- Semua log console memakai JSON per baris dan tidak boleh memuat token/secret/XML penuh.
 
 ## 11. Keputusan yang sudah ditetapkan
 
@@ -360,8 +363,13 @@ Jika sumber gagal, log boleh memuat URL dan HTTP status, tetapi jangan mencetak 
 6. Deployment dimulai dengan polling.
 7. `TINGGI_AIR` ditampilkan mentah dari sumber.
 8. Cache menggunakan TTL awal 60 detik dan stale fallback 15 menit.
+9. Notifikasi hanya dipicu perubahan `STATUS_SIAGA`.
+10. Baseline pertama tidak dikirim sebagai notifikasi.
+11. Worker monitoring menggunakan state persistent lokal dan hanya satu replica pada deployment awal.
+12. Kegagalan upstream/target hanya dicatat di log dan `/system`, tanpa notifikasi broadcast.
+13. Log console menggunakan format JSON per baris.
 
-Hal yang masih terbuka adalah command admin tambahan selain `/system`, format persis field Rich Message mengikuti referensi lokal, dan apakah data perlu disimpan melewati restart container.
+Hal yang masih terbuka adalah command admin tambahan selain `/system`, format persis field Rich Message mengikuti referensi lokal, serta detail dukungan thread dan method edit Rich Message.
 
 ## 12. Tahap implementasi setelah rancangan disepakati
 

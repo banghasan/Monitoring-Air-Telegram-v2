@@ -1,12 +1,12 @@
 # Issue 004 — Satu Worker dan Duplicate Notification
 
-Status: **Proposed**
+Status: **Resolved**
 
 ## Pertanyaan
 
 Bagaimana mencegah satu perubahan dikirim berkali-kali jika Docker menjalankan lebih dari satu worker?
 
-## Keputusan sementara
+## Keputusan
 
 Deployment awal hanya menjalankan satu replica `monitor`. Bot polling dan worker monitoring adalah role yang berbeda; bot tidak menyalakan scheduler jika worker aktif.
 
