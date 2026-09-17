@@ -6,18 +6,21 @@ FROM oven/bun:${BUN_VERSION} AS dependencies
 
 WORKDIR /app
 
-# These files will be supplied when the Bun application skeleton is created.
 COPY package.json bun.lock* ./
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --production
 
 FROM oven/bun:${BUN_VERSION} AS runtime
 
 WORKDIR /app
 ENV NODE_ENV=production
+ENV MONITOR_STATE_DB_PATH=/data/state/monitor.sqlite
 
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY package.json bun.lock* ./
 COPY src ./src
+COPY scripts ./scripts
+COPY migrations ./migrations
+RUN mkdir -p /data/state && chown -R bun:bun /data
 
 USER bun
 EXPOSE 3000

@@ -29,7 +29,7 @@ Jangan menyimpan histori tinggi air lengkap pada MVP. Jika histori dibutuhkan, i
 - Hanya satu replica monitor yang diperbolehkan pada deployment awal.
 - SQLite tidak digunakan sebagai mekanisme distributed lock antar-host.
 
-Path database direncanakan melalui environment:
+Path database dikonfigurasi melalui environment:
 
 ```dotenv
 MONITOR_STATE_DB_PATH=/data/state/monitor.sqlite

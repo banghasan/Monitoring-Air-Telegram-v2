@@ -1,6 +1,6 @@
 # Scope dan Command
 
-Status: keputusan diskusi.
+Status: keputusan diimplementasikan.
 
 ## Tujuan
 
@@ -35,7 +35,7 @@ Struktur tampilan yang disepakati:
 🌐 Sumber: Posko Banjir DKI Jakarta
    https://poskobanjir.dsdadki.web.id/
 
-📍 P.S. Angke Hulu (Baru)
+📍 P.S. Angke Hulu 1
    https://www.google.com/maps?q=<latitude>,<longitude>
 
   ├ 🕒 <tanggal pengamatan> WIB

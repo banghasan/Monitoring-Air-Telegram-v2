@@ -1,6 +1,6 @@
 # Testing dan Operasi
 
-Dokumen ini mendefinisikan checklist yang harus dipenuhi saat implementasi nanti. Tidak ada kode atau test yang dijalankan pada tahap diskusi ini.
+Dokumen ini adalah checklist operasional implementasi yang sudah tersedia. Test default tidak menghubungi Telegram atau XML live.
 
 Aturan detail tentang fixture, isolasi unit test, `bun test`, lint, type-check, dan quality gate ada di [konsep Testing dan Quality Gate](./concepts/16-testing-and-quality.md). Dokumen ini mempertahankan checklist operasional tingkat aplikasi.
 
@@ -59,10 +59,10 @@ Aturan detail tentang fixture, isolasi unit test, `bun test`, lint, type-check, 
 ## Target Telegram
 
 - Group dengan topic dapat memakai `thread_id`.
-- Group tanpa topic tidak memakai `thread_id`.
-- Channel diuji dengan konfigurasi tanpa thread terlebih dahulu.
-- Target invalid dilaporkan di log dan `/system`.
-- MVP menolak lebih dari satu target atau target tanpa `thread_id` sampai dukungan multi-target diaktifkan.
+- MVP saat ini hanya menerima satu group forum dengan `thread_id` positif.
+- Group tanpa topic dan channel belum menjadi target deployment MVP.
+- Target invalid ditolak saat startup dan tidak boleh menjadi tujuan pengiriman.
+- Model internal sudah berupa array agar multi-target dapat ditambahkan setelah validasi tipe target.
 
 ## Akses
 

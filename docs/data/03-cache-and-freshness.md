@@ -2,7 +2,7 @@
 
 ## Keputusan awal
 
-Cache menggunakan memory process dan menyimpan satu snapshot Angke Hulu. Belum ada database, Redis, atau histori permanen.
+Cache command menggunakan memory process dan menyimpan satu snapshot Angke Hulu. State notifikasi worker memakai SQLite terpisah; cache tidak menjadi histori permanen.
 
 | Parameter | Nilai awal |
 | --- | ---: |
@@ -30,6 +30,8 @@ Pesan `/air` minimal memuat:
 - waktu pengamatan sumber (`TANGGAL`);
 - waktu fetch aplikasi (`fetchedAt`);
 - status `fresh` atau `stale`.
+
+Implementasi menampilkan waktu pengambilan aplikasi dan memberi peringatan Rich Message ketika cache stale atau usia `TANGGAL` melewati `MAX_DATA_AGE_SECONDS`.
 
 Jika data stale:
 

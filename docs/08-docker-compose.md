@@ -4,23 +4,25 @@
 
 Bot dibuild menjadi satu Docker image dan dijalankan sebagai dua service Compose: `bot` untuk polling Telegram dan `monitor` untuk pemantauan berkala. Polling tidak membutuhkan endpoint publik Telegram, tetapi setiap service tetap menyediakan endpoint health check untuk kebutuhan operasional.
 
-## File yang direncanakan
+## File deployment
 
 ```text
 Dockerfile
-docker-compose.yml
+docker-compose.example.yml
 .dockerignore
 .env.example
 .env                 # lokal/production, tidak di-commit
 ```
 
-Contoh Compose yang memakai image GHCR tersedia di [deployment Compose GHCR](./deployment/01-compose-ghcr.md). File tersebut adalah contoh dokumentasi; tidak ada file Compose production yang dijalankan pada tahap diskusi.
+Contoh Compose yang memakai image GHCR tersedia di [`docker-compose.example.yml`](../docker-compose.example.yml) dan dijelaskan di [deployment Compose GHCR](./deployment/01-compose-ghcr.md). File tersebut sengaja memakai placeholder melalui `.env`, sehingga secret tetap berada di host.
 
 ## Environment
 
 Docker Compose memuat environment production melalui `env_file`. Secret hanya diberikan saat container dijalankan dan tidak dimasukkan ke layer image.
 
 File `.env.example` berisi nama variable dan contoh aman. File `.env` asli harus berada di `.gitignore` dan dikelola di host/deployment secret store.
+
+File contoh root yang dapat dipakai setelah image tersedia adalah [`docker-compose.example.yml`](../docker-compose.example.yml). Secara default ia membaca `.env`; gunakan `ENV_FILE=.env.example` hanya untuk memvalidasi struktur Compose dengan placeholder.
 
 ## Image
 
@@ -41,13 +43,13 @@ Rancangan Dockerfile:
 - jalankan process dengan user non-root bila memungkinkan;
 - sediakan endpoint `/health` untuk pemeriksaan container.
 
-Sebelum build image, pemeriksaan lokal yang direncanakan adalah:
+Sebelum build image, pemeriksaan lokal yang digunakan adalah:
 
 ```bash
 bun run check
 ```
 
-Build Docker tidak menggantikan unit test, lint, atau type-check. Workflow build manual boleh menambahkan quality gate sebagai job terpisah setelah source aplikasi tersedia.
+Build Docker tidak menggantikan unit test, lint, atau type-check. Quality gate tetap dijalankan melalui `bun run check` sebelum build/publish image.
 
 ## Runtime polling
 

@@ -1,0 +1,38 @@
+{
+  "name": "monitoring-air-telegram-v2",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "module": "src/index.ts",
+  "scripts": {
+    "dev": "bun --watch run src/index.ts",
+    "start": "bun run src/index.ts",
+    "start:bot": "APP_ROLE=bot bun run src/bot.ts",
+    "start:monitor": "APP_ROLE=monitor bun run src/monitor.ts",
+    "test": "bun test",
+    "test:unit": "bun test ./test/unit",
+    "test:integration": "bun test ./test/integration",
+    "test:coverage": "bun test --coverage",
+    "format": "biome format --write ./src ./scripts ./test",
+    "format:check": "biome check --formatter-enabled=true --linter-enabled=false --assist-enabled=false ./src ./scripts ./test",
+    "lint": "biome lint ./src ./scripts ./test",
+    "typecheck": "tsc --noEmit",
+    "check": "biome ci ./src ./scripts ./test && bun run typecheck && bun test",
+    "version:show": "bun scripts/version.ts show",
+    "version:dump": "bun scripts/version.ts dump",
+    "version:bump:patch": "bun scripts/version.ts bump patch",
+    "version:bump:minor": "bun scripts/version.ts bump minor",
+    "version:bump:major": "bun scripts/version.ts bump major"
+  },
+  "dependencies": {
+    "@grammyjs/types": "5.0.0",
+    "elysia": "1.4.30",
+    "fast-xml-parser": "5.11.1",
+    "grammy": "1.46.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.14",
+    "@types/bun": "1.4.2",
+    "typescript": "7.0.2"
+  }
+}

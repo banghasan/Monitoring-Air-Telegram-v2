@@ -20,7 +20,7 @@ Referensi tooling:
 - [Bun TypeScript dan batas type-check](https://bun.com/docs/runtime/file-types)
 - [Biome CLI](https://biomejs.dev/reference/cli/)
 
-## Script project yang direncanakan
+## Script project yang tersedia
 
 ```json
 {

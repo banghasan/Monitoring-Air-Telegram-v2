@@ -69,7 +69,7 @@ Nama untuk pengguna dikonfigurasi terpisah:
 P.S. Angke Hulu (Baru)
 ```
 
-Nama tersebut hanya label presentasi. Nama asli dari XML tetap disimpan di data internal dan ditampilkan dalam informasi admin bila diperlukan.
+Nama tersebut hanya fallback label konfigurasi. Output utama memakai nama asli `NAMA_PINTU_AIR` dari XML agar data tampil apa adanya.
 
 ## Koordinat dan tautan peta
 

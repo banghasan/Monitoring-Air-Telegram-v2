@@ -1,6 +1,6 @@
 # Deployment
 
-Folder ini berisi dokumentasi deployment yang belum dijalankan pada tahap diskusi.
+Folder ini berisi dokumentasi deployment Docker/Compose yang sudah disesuaikan dengan image dan role aplikasi.
 
 - [Compose dengan image GHCR](./01-compose-ghcr.md)
 

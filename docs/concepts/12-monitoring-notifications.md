@@ -36,7 +36,7 @@ Notifikasi dikirim sebagai Rich Message:
 ```text
 🔔 PEMBARUAN TINGGI MUKA AIR
 
-📍 P.S. Angke Hulu (Baru)
+📍 P.S. Angke Hulu 1
   ├ 🕒 <TANGGAL> WIB
   ├ 🌊 <TINGGI_AIR dalam cm> <📈 Naik / 📉 Turun / ➡️ Tetap>
   └ 🚦 Status: <STATUS_SIAGA>

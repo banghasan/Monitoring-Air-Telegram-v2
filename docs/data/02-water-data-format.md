@@ -69,7 +69,7 @@ Untuk keterbacaan di Telegram, gunakan legenda warna berikut tanpa mengubah labe
 
 Emoji hanya elemen visual. Penentuan status utama tetap memakai `STATUS_SIAGA` dari XML.
 
-Label dan format harus disesuaikan dengan data yang benar-benar tersedia. Jika satuan atau skala threshold belum dapat dipastikan, tampilkan nilai sumber dan jangan mengklaim konversi cm.
+Label dan format mengikuti data yang tersedia pada XML serta tampilan website sumber. Threshold raw dibagi 10 untuk ditampilkan dalam cm, sama seperti `TINGGI_AIR`.
 
 ## Arah perubahan
 

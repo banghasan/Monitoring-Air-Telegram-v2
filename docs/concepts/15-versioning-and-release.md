@@ -11,7 +11,7 @@ Dokumen ini menafsirkan “dump version” sebagai mencetak versi saat ini untuk
 - Versi aplikasi berada pada field `version` di `package.json`.
 - Format awal memakai Semantic Versioning stabil: `MAJOR.MINOR.PATCH`, misalnya `0.1.0`.
 - `.bun-version` adalah versi runtime Bun dan tidak boleh ikut berubah ketika versi aplikasi dibump.
-- `APP_VERSION` tidak menjadi source of truth; jika tetap tersedia sebagai environment, nilainya harus sama dengan versi package atau hanya menjadi override yang divalidasi.
+- `APP_VERSION` tidak menjadi source of truth; variable ini opsional dan, jika diisi, harus sama dengan versi package sebagai validasi deployment.
 
 Contoh:
 
@@ -22,7 +22,7 @@ Contoh:
 }
 ```
 
-## Command yang direncanakan
+## Command yang tersedia
 
 ```bash
 bun run version:show
@@ -42,7 +42,7 @@ Perilaku:
 | `version:bump:minor` | `0.1.0` menjadi `0.2.0` dan patch menjadi `0`. |
 | `version:bump:major` | `0.1.0` menjadi `1.0.0` dan minor/patch menjadi `0`. |
 
-Script direncanakan berada di `scripts/version.ts`, sedangkan command publiknya didaftarkan di `package.json`:
+Script berada di [`scripts/version.ts`](../../scripts/version.ts), sedangkan command-nya didaftarkan di `package.json`:
 
 ```json
 {
@@ -75,7 +75,7 @@ Build Docker berikutnya dapat memakai `package.json#version` untuk label atau ta
 
 ## Test version script
 
-Script version harus diuji tanpa mengubah `package.json` repository. Test menggunakan temporary directory dan fixture package JSON, lalu memverifikasi:
+Implementasi script ada di [`scripts/version.ts`](../../scripts/version.ts) dan diuji tanpa mengubah `package.json` repository. Test menggunakan temporary directory dan fixture package JSON, lalu memverifikasi:
 
 - show/dump membaca versi yang benar;
 - patch, minor, dan major menghasilkan angka yang benar;

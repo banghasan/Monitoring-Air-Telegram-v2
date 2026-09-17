@@ -2,7 +2,7 @@
 
 ## Status
 
-Ini contoh dokumentasi deployment, bukan file `docker-compose.yml` production. Contoh baru digunakan setelah source aplikasi dan image sudah tersedia di GHCR.
+Ini contoh deployment yang siap dipakai setelah image dipublish ke GHCR. File runnable-nya ada di [`docker-compose.example.yml`](../../docker-compose.example.yml); contoh ini tidak menyimpan secret.
 
 ## Image
 
@@ -37,7 +37,7 @@ services:
     image: ghcr.io/banghasan/monitoring-air-telegram-v2:${IMAGE_TAG:-latest}
     pull_policy: always
     env_file:
-      - .env
+      - ${ENV_FILE:-.env}
     environment:
       APP_ROLE: bot
       PORT: 3000
@@ -66,7 +66,7 @@ services:
     image: ghcr.io/banghasan/monitoring-air-telegram-v2:${IMAGE_TAG:-latest}
     pull_policy: always
     env_file:
-      - .env
+      - ${ENV_FILE:-.env}
     environment:
       APP_ROLE: monitor
       PORT: 3000
@@ -121,13 +121,14 @@ Secret tidak ditulis ke YAML Compose atau image. `INTERNAL_STATUS_TOKEN` boleh b
 1. Jalankan GitHub Action Docker secara manual dengan `push=true`.
 2. Pastikan tag image berhasil tersedia di GHCR.
 3. Set `IMAGE_TAG` pada environment host atau gunakan default `latest`.
-4. Validasi konfigurasi Compose dengan `docker compose config`.
-5. Pull image yang sesuai.
-6. Jalankan `docker compose up -d`.
-7. Periksa `docker compose ps` dan health check.
-8. Periksa log dengan `docker compose logs -f bot monitor`.
+4. Salin `.env.example` menjadi `.env`, isi secret, atau gunakan `ENV_FILE` untuk menunjuk file env lain.
+5. Validasi konfigurasi Compose dengan `docker compose config`.
+6. Pull image yang sesuai.
+7. Jalankan `docker compose up -d`.
+8. Periksa `docker compose ps` dan health check.
+9. Periksa log dengan `docker compose logs -f bot monitor`.
 
-Perintah operasional tersebut adalah prosedur dokumentasi dan belum dijalankan pada tahap ini.
+Smoke test lokal sudah memvalidasi konfigurasi Compose dan health endpoint image monitor. Pull/publish ke GHCR tetap merupakan langkah deployment manual.
 
 ## Upgrade dan rollback
 

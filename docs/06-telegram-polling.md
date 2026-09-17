@@ -2,7 +2,7 @@
 
 ## Keputusan
 
-Semua tahap awal menggunakan long polling. Webhook belum menjadi mode deployment aktif.
+Deployment awal menggunakan long polling. Webhook sudah memiliki route dan konfigurasi, tetapi belum menjadi mode deployment default.
 
 Konfigurasi awal:
 

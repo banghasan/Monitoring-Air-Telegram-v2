@@ -9,7 +9,7 @@ Configuration dibaca dari environment. Secret tidak ditulis ke source code, Dock
 ```dotenv
 # Runtime
 NODE_ENV=development
-APP_VERSION=0.1.0
+# APP_VERSION=0.1.0  # optional; must match package.json when provided
 PORT=3000
 APP_ROLE=bot
 TIMEZONE=Asia/Jakarta
@@ -60,7 +60,7 @@ PUBLIC_COMMAND_COOLDOWN_SECONDS=1
 ## Station variable
 
 - `WATER_STATION_QUERY` adalah selector semantik, bukan ID.
-- `WATER_STATION_DISPLAY_NAME` hanya label UI.
+- `WATER_STATION_DISPLAY_NAME` hanya fallback label; output utama menampilkan nama record XML apa adanya.
 - `ID_PINTU_AIR` dan `KODE_STASIUN` tidak disimpan sebagai konfigurasi identity.
 - `APP_VERSION` untuk runtime sebaiknya diambil dari `package.json`; environment tidak boleh menjadi sumber versi kedua yang berbeda.
 - `APP_ROLE` menentukan role container: `bot` atau `monitor`.

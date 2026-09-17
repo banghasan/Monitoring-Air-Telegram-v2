@@ -2,7 +2,7 @@
 
 ## Prinsip
 
-Source code dipecah berdasarkan domain dan tanggung jawab, bukan berdasarkan ukuran file semata. Tujuannya agar alur XML, monitoring, Telegram, dan HTTP dapat dibaca serta diuji tanpa saling menempel.
+Source code dipecah berdasarkan domain dan tanggung jawab. Tujuannya agar alur XML, monitoring, Telegram, dan HTTP dapat dibaca serta diuji tanpa saling menempel.
 
 Aturan utama:
 
@@ -11,95 +11,76 @@ Aturan utama:
 - worker tidak berisi aturan parsing XML dan format Rich Message sekaligus;
 - adapter infrastructure boleh bergantung pada library, domain tidak;
 - entrypoint hanya merakit dependency dan memilih role `bot` atau `monitor`;
-- hindari import cycle;
-- satu file boleh berisi beberapa fungsi kecil yang sangat erat, tetapi jangan membuat satu `index.ts` menjadi tempat seluruh aplikasi.
+- hindari import cycle.
 
-## Struktur yang direncanakan
+## Struktur aktual
 
 ```text
 src/
 ├── app/
-│   ├── commands/              # use case / application service
-│   ├── monitoring/            # orchestration monitoring
-│   └── water/                 # orchestration pembacaan data
-├── domain/
-│   ├── water/
-│   │   ├── water-reading.ts
-│   │   ├── station-selector.ts
-│   │   ├── water-height.ts
-│   │   ├── alert-status.ts
-│   │   └── water-policy.ts
-│   ├── monitoring/
-│   │   ├── monitor-state.ts
-│   │   └── notification-policy.ts
-│   └── telegram/
-│       └── notification-target.ts
-├── infrastructure/
-│   ├── source/
-│   │   ├── water-source-client.ts
-│   │   └── xml-water-parser.ts
-│   ├── cache/
-│   │   └── water-cache.ts
-│   ├── state/
-│   │   └── monitor-state-repository.ts
-│   ├── telegram/
-│   │   ├── telegram-bot.ts
-│   │   ├── telegram-notifier.ts
-│   │   └── rich-message-adapter.ts
-│   └── logging/
-│       └── structured-logger.ts
-├── interfaces/
-│   ├── http/
-│   │   ├── health-routes.ts
-│   │   └── webhook-route.ts
-│   └── telegram/
-│       ├── commands.ts
-│       └── callbacks.ts
+│   ├── bot/
+│   │   ├── bot-runtime.ts
+│   │   └── internal-status-client.ts
+│   └── monitoring/
+│       ├── monitor-runtime.ts
+│       ├── monitor-service.ts
+│       └── telegram-notification-sender.ts
 ├── config/
 │   └── config.ts
-├── shared/
-│   ├── clock.ts
-│   ├── retry.ts
-│   └── errors.ts
-├── bot.ts                    # entrypoint role bot/polling
-└── monitor.ts                # entrypoint role monitor
+├── domain/
+│   ├── monitoring/
+│   │   ├── notification-policy.ts
+│   │   └── types.ts
+│   └── water/
+│       ├── types.ts
+│       └── water-policy.ts
+├── infrastructure/
+│   ├── cache/water-cache.ts
+│   ├── logging/structured-logger.ts
+│   ├── retry/retry.ts
+│   ├── source/xml-water-source.ts
+│   ├── state/sqlite-state-repository.ts
+│   └── telegram/telegram-client.ts
+├── interfaces/
+│   ├── http/runtime-server.ts
+│   └── telegram/
+│       ├── bot-handlers.ts
+│       └── rich-message-builder.ts
+├── bot.ts
+├── index.ts
+└── monitor.ts
 
 scripts/
 └── version.ts
 
+migrations/
+└── 001_initial_state.sql
+
 test/
 ├── fixtures/
-├── helpers/
-├── unit/
-│   ├── domain/
-│   ├── app/
-│   └── infrastructure/
-└── integration/
+├── integration/
+└── unit/
 ```
 
-Nama folder boleh disesuaikan saat implementasi, tetapi batas domainnya harus dipertahankan. `src/bot.ts` dan `src/monitor.ts` dapat memakai image yang sama dengan command Docker berbeda.
+`src/bot.ts` dan `src/monitor.ts` memakai image yang sama dengan command Docker berbeda. `src/index.ts` menjadi router role untuk command default image.
 
-## Tanggung jawab domain
+## Tanggung jawab layer
 
-### Domain water
+### Domain
 
-Berisi tipe dan aturan murni: selector `Angke Hulu`, validasi jumlah record, transformasi `TINGGI_AIR` ke display cm, arah perubahan, threshold, dan status.
+Berisi tipe dan aturan murni: selector semantik, transformasi `TINGGI_AIR` ke cm, arah perubahan, threshold, normalisasi status, dan kebijakan perubahan status.
 
 ### Application
 
-Mengatur use case seperti `getCurrentAir`, `refreshWaterSnapshot`, `runMonitorOnce`, `handleStatusTransition`, dan `getSystemInfo`. Layer ini menerima dependency melalui parameter/interface.
+Mengatur use case seperti pembacaan cache, siklus monitoring, retry delivery, dan pengambilan status internal. Dependency diterima melalui parameter/interface.
 
 ### Infrastructure
 
-Mengimplementasikan HTTP fetch XML, parser XML, cache, SQLite/file state, grammY, Rich Message API, dan logger. Detail library tidak boleh bocor ke fungsi domain.
+Mengimplementasikan HTTP fetch XML, parser, cache, SQLite, grammY, Rich Message transport, retry, dan logger. Detail library tidak boleh bocor ke aturan domain.
 
 ### Interfaces
 
 Menghubungkan framework dengan application service: route Elysia, handler command grammY, callback button, polling, dan webhook.
-
-## Testing mengikuti struktur
-
-Test domain tidak membutuhkan network atau Telegram. Test infrastructure menggunakan fake dependency. Test application memakai dependency injection. Test interface memakai request/update sintetis. Struktur test mengikuti source agar lokasi test mudah ditemukan tanpa membuat test bergantung pada private implementation detail.
 
 ## Dependency direction
 
@@ -109,4 +90,4 @@ interfaces → app → domain
      └── infrastructure adapters
 ```
 
-`domain` tidak mengarah kembali ke `interfaces` atau `infrastructure`. `shared` hanya berisi utilitas generik yang tidak mengetahui aturan bisnis.
+`domain` tidak mengarah kembali ke `interfaces` atau `infrastructure`. Test mengikuti batas ini: domain memakai data in-memory, adapter memakai fake dependency, dan integration test menggabungkan komponen tanpa network live.
