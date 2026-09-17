@@ -37,19 +37,18 @@ Notifikasi dikirim sebagai Rich Message:
 🔔 PEMBARUAN TINGGI MUKA AIR
 
 📍 P.S. Angke Hulu 1
-  ├ 🕒 <TANGGAL> WIB
-  ├ 🌊 <TINGGI_AIR dalam cm> <📈 Naik / 📉 Turun / ➡️ Tetap>
-  └ 🚦 Status: <STATUS_SIAGA>
+    ├ 🕒 <TANGGAL> WIB
+    ├ <📈 Naik / 📉 Turun / ➡️ Tetap> · Ketinggian: <TINGGI_AIR dalam cm>
+    └ 🟢 <STATUS_SIAGA>
 
 📣 Perubahan status:
-  └ <status lama> → <status baru>
+    └ <status lama> → <status baru>
 
 🌊 Pembacaan saat perubahan:
-  ├ Ketinggian: <TINGGI_AIR dalam cm>
-  └ Arah: <📈 Naik / 📉 Turun / ➡️ Tetap>
+    ├ Ketinggian: <TINGGI_AIR dalam cm>
+    └ Arah: <📈 Naik / 📉 Turun / ➡️ Tetap>
 
-▸ 📋 Keterangan
-▸ 🧭 Legenda
+▸ 📋 Keterangan & Legenda
 ```
 
 Status siaga ditampilkan pada bagian utama, bukan hanya di dalam summary, karena merupakan informasi prioritas monitoring.

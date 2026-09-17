@@ -28,16 +28,18 @@ Implementasi memakai grammY `1.46.0`, yang menyediakan type dan method Rich Mess
 Susunan logis:
 
 1. heading `🌊 PEMANTAUAN TINGGI MUKA AIR (TMA)`;
-2. link sumber Posko Banjir DKI Jakarta;
-3. nama station aktual dari `NAMA_PINTU_AIR` dan link peta;
+2. inline link sumber pada teks `Posko Banjir DKI Jakarta`;
+3. nama station aktual dari `NAMA_PINTU_AIR` sebagai inline link ke peta jika koordinat tersedia;
 4. block data pengamatan;
-5. `InputRichBlockDetails` untuk `📋 Keterangan`, collapsed;
-6. `InputRichBlockDetails` untuk `🧭 Legenda`, collapsed;
-7. `InputRichBlockButtons` berisi `🔄 Segarkan` dan `🗺️ Buka Peta` jika tersedia.
+5. satu `InputRichBlockDetails` dengan summary `📋 Keterangan & Legenda`, collapsed;
+6. waktu pengambilan aplikasi, `InputRichBlockTable` untuk threshold, dan paragraph legenda di dalam details;
+7. `InputRichBlockButtons` berisi `🔄 Segarkan`.
 
 ## Summary collapsed
 
-`📋 Keterangan` dan `🧭 Legenda` bukan pesan terpisah dan bukan button toggle manual. Keduanya menjadi summary/details block dari Rich Message agar pengguna dapat membuka bagian yang diperlukan.
+`📋 Keterangan & Legenda` bukan pesan terpisah dan bukan button toggle manual. Keduanya menjadi satu summary/details block dari Rich Message agar pengguna dapat membuka informasi tambahan dalam satu tindakan. Waktu pengambilan aplikasi berada di dalam details agar tidak mengulang informasi waktu pengamatan pada bagian utama.
+
+Threshold ditampilkan menggunakan tabel dua kolom (`Status` dan `Batas TMA`) dengan nilai yang dibaca dari record aktif. Legenda arah ditampilkan sebagai paragraph setelah tabel.
 
 ## Button refresh
 
@@ -52,10 +54,6 @@ Perilaku yang disepakati:
 
 Adapter memanggil `bot.api.editMessageText(chatId, messageId, richMessage)`. GrammY meneruskan object tersebut sebagai field `rich_message` pada method `editMessageText`, sesuai referensi lokal. Dukungan ini dilindungi oleh unit test adapter dan fallback tetap aktif untuk error API, pesan hilang, atau thread tidak tersedia.
 
-## Button peta
-
-`🗺️ Buka Peta` memakai URL langsung yang dibentuk dari koordinat record. Jika koordinat tidak valid, button peta dihilangkan.
-
 ## Link dalam pesan
 
-URL sumber dan URL peta dapat disajikan sebagai rich text link atau rich button sesuai kemampuan `InputRichMessage`. Satu URL tidak perlu diduplikasi jika sudah jelas dan mudah ditemukan.
+URL sumber dan URL peta disajikan sebagai `RichTextUrl` pada teks yang relevan. URL tidak dicetak sebagai teks mentah dan tidak diduplikasi menjadi button peta. Jika koordinat tidak valid, nama stasiun tetap ditampilkan tanpa link.

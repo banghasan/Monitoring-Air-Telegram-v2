@@ -60,7 +60,7 @@ test("bot webhook HTTP hanya menerima secret yang dikonfigurasi", async () => {
   const config = parseConfig({
     TELEGRAM_BOT_TOKEN: "test-token",
     APP_ROLE: "bot",
-    TELEGRAM_MODE: "webhook",
+    TELEGRAM_WEBHOOK_ENABLED: "true",
     TELEGRAM_WEBHOOK_URL: "https://example.test/telegram/webhook",
     TELEGRAM_WEBHOOK_SECRET: "webhook-secret",
   });

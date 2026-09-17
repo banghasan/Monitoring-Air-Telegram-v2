@@ -32,23 +32,20 @@ Struktur tampilan yang disepakati:
 ```text
 🌊 PEMANTAUAN TINGGI MUKA AIR (TMA)
 
-🌐 Sumber: Posko Banjir DKI Jakarta
-   https://poskobanjir.dsdadki.web.id/
+🌐 Sumber: [Posko Banjir DKI Jakarta](https://poskobanjir.dsdadki.web.id/xmldata.xml)
 
-📍 P.S. Angke Hulu 1
-   https://www.google.com/maps?q=<latitude>,<longitude>
+📍 [P.S. Angke Hulu 1](https://www.google.com/maps?q=<latitude>,<longitude>)
 
-  ├ 🕒 <tanggal pengamatan> WIB
-  ├ 🌊 <ikon arah> Ketinggian: <TINGGI_AIR raw / 10> cm
-  └ 🚦 Status: <STATUS_SIAGA>
+    ├ 🕒 <tanggal pengamatan> WIB
+    ├ <ikon arah> Ketinggian: <TINGGI_AIR raw / 10> cm
+    └ 🟢 <STATUS_SIAGA>
 
-▸ 📋 Keterangan
-▸ 🧭 Legenda
+▸ 📋 Keterangan & Legenda
 
-[🔄 Segarkan] [🗺️ Buka Peta]
+[🔄 Segarkan]
 ```
 
-Emoji adalah bagian dari presentasi, bukan penentu status. Status tetap berasal dari field XML dan arah tetap dihitung dari dua nilai tinggi air. Nilai raw disimpan untuk diagnostik, sedangkan tampilan mengikuti website sumber (`TINGGI_AIR / 10` dalam cm).
+Nama sumber dan nama stasiun adalah inline link Rich Message; URL tidak ditampilkan sebagai teks mentah. Button peta tidak dibuat karena nama stasiun sudah membuka koordinat Google Maps. Emoji adalah bagian dari presentasi, bukan penentu status. Status tetap berasal dari field XML dan arah tetap dihitung dari dua nilai tinggi air. Nilai raw disimpan untuk diagnostik, sedangkan tampilan mengikuti website sumber (`TINGGI_AIR / 10` dalam cm).
 
 ## Tampilan arah perubahan
 
@@ -79,32 +76,27 @@ Pengukuran tidak perlu mengambil data air. Tujuannya adalah mengetahui apakah pr
 
 ## Summary yang dapat dibuka
 
-Bagian berikut berada dalam blok Rich Message yang collapsed secara default:
+Bagian berikut berada dalam satu blok Rich Message yang collapsed secara default:
 
-### 📋 Keterangan
+### 📋 Keterangan & Legenda
 
-Berisi threshold siaga yang dibaca dari record sumber yang sedang terpilih. Isinya tidak ditulis sebagai angka hardcode di handler.
+Berisi waktu pengambilan aplikasi dan tabel threshold siaga yang dibaca dari record sumber yang sedang terpilih. Isinya tidak ditulis sebagai angka hardcode di handler.
 
 Format visual yang mengikuti web sumber:
 
-```text
-🔴 > 300 cm (BAHAYA)
-🟡 250–300 cm (SIAGA)
-🔵 150–250 cm (WASPADA)
-🟢 < 150 cm (Normal)
-```
+| Status | Batas TMA |
+| --- | --- |
+| 🔴 BAHAYA | > 300 cm |
+| 🟡 SIAGA | 250–300 cm |
+| 🔵 WASPADA | 150–250 cm |
+| 🟢 Normal | < 150 cm |
 
-### 🧭 Legenda
-
-```text
-📈 naik
-📉 turun
-➡️ tetap
-```
+Legenda ditampilkan di bawah tabel: `Legenda: 📈 naik · 📉 turun · ➡️ tetap`.
 
 ## Tombol
 
 - `🔄 Segarkan`: mencoba memperbarui pesan yang sama terlebih dahulu.
-- `🗺️ Buka Peta`: membuka URL Google Maps dari koordinat record yang ditemukan.
+
+URL sumber dan URL Google Maps ditempelkan pada teks yang relevan sebagai inline link. Jika koordinat tidak tersedia, nama stasiun tetap tampil sebagai teks biasa.
 
 Jika edit Rich Message tidak didukung oleh method atau library yang dipakai, `🔄 Segarkan` memakai fallback mengirim Rich Message baru.

@@ -126,7 +126,8 @@ Fixture disimpan di `test/fixtures/`, bukan di `src/` dan bukan mengambil data l
 ### Rich Message dan command
 
 - `/air`, `/ping`, `/start`, dan `/help` menghasilkan Rich Message;
-- `Keterangan` dan `Legenda` menjadi details collapsed;
+- `Keterangan` dan `Legenda` menjadi satu details collapsed;
+- threshold pada details diverifikasi sebagai tabel Rich Message;
 - button berada di Rich Message;
 - refresh mencoba edit sebelum fallback pesan baru;
 - `/ping` mengukur durasi process secara deterministic;

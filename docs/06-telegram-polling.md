@@ -2,12 +2,12 @@
 
 ## Keputusan
 
-Deployment awal menggunakan long polling. Webhook sudah memiliki route dan konfigurasi, tetapi belum menjadi mode deployment default.
+Deployment awal menggunakan long polling. Webhook juga tersedia sebagai mode alternatif yang dipilih dengan satu flag.
 
 Konfigurasi awal:
 
 ```dotenv
-TELEGRAM_MODE=polling
+TELEGRAM_WEBHOOK_ENABLED=false
 ```
 
 ## Perilaku polling
@@ -32,11 +32,11 @@ Alasannya:
 
 Konfigurasi role harus eksplisit. Bot polling tidak boleh sekaligus menyalakan worker monitoring jika service `monitor` juga aktif.
 
-## Perpindahan mode di masa depan
+## Mode webhook opsional
 
-Webhook boleh ditambahkan kemudian, tetapi mode tersebut harus eksklusif dengan polling. Saat berganti dari webhook ke polling, status webhook Telegram perlu ditangani agar update tidak diperebutkan oleh dua mekanisme.
+Saat `TELEGRAM_WEBHOOK_ENABLED=true`, aplikasi memakai webhook dan tidak menjalankan polling. URL HTTPS serta secret header wajib dikonfigurasi. Saat `false`, aplikasi otomatis menghapus webhook Telegram lalu menjalankan polling.
 
-Detail webhook, secret token, dan reverse proxy baru ditulis sebagai deployment lanjutan setelah polling stabil.
+Flag hanya menerima `true` atau `false`; typo ditolak saat startup agar tidak salah masuk ke mode polling. `TELEGRAM_MODE` tidak dipakai.
 
 ## Shutdown
 

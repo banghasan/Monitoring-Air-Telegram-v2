@@ -111,6 +111,6 @@ Tanpa state persisten, worker dapat mengirim notifikasi ulang setelah restart at
 
 Service `bot` tidak membuka file SQLite monitor secara langsung. Jika `/system` membutuhkan status worker, bot mengambil ringkasan melalui internal status endpoint pada jaringan Compose dengan service token.
 
-## Webhook masa depan
+## Webhook opsional
 
-Jika mode webhook diaktifkan, port container perlu berada di belakang domain HTTPS atau reverse proxy. Port Compose saja tidak membuat URL webhook menjadi publik.
+Jika `TELEGRAM_WEBHOOK_ENABLED=true`, port container perlu berada di belakang domain HTTPS atau reverse proxy. Port Compose saja tidak membuat URL webhook menjadi publik. Jika `false`, bot otomatis memakai polling.

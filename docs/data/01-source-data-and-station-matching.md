@@ -79,7 +79,7 @@ URL Google Maps dibuat dari `LATITUDE` dan `LONGITUDE` record yang sedang terpil
 https://www.google.com/maps?q=<LATITUDE>,<LONGITUDE>
 ```
 
-Koordinat tidak di-hardcode di command handler. Jika koordinat kosong atau invalid, button peta tidak ditampilkan.
+Koordinat tidak di-hardcode di command handler. Jika koordinat kosong atau invalid, nama stasiun tidak diberi inline link peta.
 
 ## Header HTTP sumber
 

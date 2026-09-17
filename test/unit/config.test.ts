@@ -33,8 +33,44 @@ test("config menerima role bot tanpa target dan webhook menuntut URL serta secre
     parseConfig({
       TELEGRAM_BOT_TOKEN: "test-token",
       APP_ROLE: "bot",
-      TELEGRAM_MODE: "webhook",
+      TELEGRAM_WEBHOOK_ENABLED: "true",
       TELEGRAM_WEBHOOK_URL: "https://example.test/webhook",
+    }),
+  ).toThrow(ConfigurationError);
+});
+
+test("mode Telegram diturunkan dari flag webhook dan menolak typo boolean", () => {
+  const polling = parseConfig({
+    TELEGRAM_BOT_TOKEN: "test-token",
+    APP_ROLE: "bot",
+    TELEGRAM_WEBHOOK_ENABLED: "false",
+  });
+  expect(polling.telegram.webhookEnabled).toBe(false);
+  expect(polling.telegram.mode).toBe("polling");
+
+  const webhook = parseConfig({
+    TELEGRAM_BOT_TOKEN: "test-token",
+    APP_ROLE: "bot",
+    TELEGRAM_WEBHOOK_ENABLED: "true",
+    TELEGRAM_WEBHOOK_URL: "https://example.test/webhook",
+    TELEGRAM_WEBHOOK_SECRET: "secret",
+  });
+  expect(webhook.telegram.webhookEnabled).toBe(true);
+  expect(webhook.telegram.mode).toBe("webhook");
+
+  expect(() =>
+    parseConfig({
+      TELEGRAM_BOT_TOKEN: "test-token",
+      APP_ROLE: "bot",
+      TELEGRAM_WEBHOOK_ENABLED: "tru",
+    }),
+  ).toThrow(ConfigurationError);
+
+  expect(() =>
+    parseConfig({
+      TELEGRAM_BOT_TOKEN: "test-token",
+      APP_ROLE: "bot",
+      TELEGRAM_MODE: "polling",
     }),
   ).toThrow(ConfigurationError);
 });

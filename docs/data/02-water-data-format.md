@@ -15,7 +15,7 @@ XML adalah sumber data. Bot memetakan field yang diperlukan ke model internal, k
 | `TINGGI_AIR` | Nilai raw ketinggian sekarang; disimpan dan dibandingkan dalam skala sumber. |
 | `TINGGI_AIR_SEBELUMNYA` | Pembanding arah perubahan. |
 | `STATUS_SIAGA` | Status utama yang ditampilkan ke pengguna. |
-| `SIAGA1`, `SIAGA2`, `SIAGA3`, `SIAGA4` | Isi bagian `Keterangan`. |
+| `SIAGA1`, `SIAGA2`, `SIAGA3`, `SIAGA4` | Isi tabel `Keterangan` pada summary gabungan `Keterangan & Legenda`. |
 | `ID_PINTU_AIR`, `KODE_STASIUN` | Metadata diagnostik yang boleh berubah. |
 
 ## Nilai tinggi air
@@ -56,7 +56,7 @@ Threshold ditampilkan dari record aktif, bukan angka hardcode. `SIAGA4=1` tersed
 
 ## Keterangan siaga
 
-Bagian `📋 Keterangan` mengambil nilai `SIAGA1` sampai `SIAGA4` dari record yang sedang cocok. Dengan begitu, threshold mengikuti record sumber dan tidak tertinggal ketika sumber berubah.
+Bagian `📋 Keterangan & Legenda` mengambil waktu pengambilan aplikasi serta nilai `SIAGA1` sampai `SIAGA4` dari record yang sedang cocok dan menampilkan threshold sebagai tabel. Dengan begitu, threshold mengikuti record sumber dan tidak tertinggal ketika sumber berubah.
 
 Untuk keterbacaan di Telegram, gunakan legenda warna berikut tanpa mengubah label sumber:
 
@@ -86,7 +86,7 @@ Perbandingan raw dan perbandingan nilai cm menghasilkan arah yang sama. Jika sal
 `TANGGAL` ditampilkan dalam zona waktu `Asia/Jakarta` dengan format yang mudah dibaca, misalnya:
 
 ```text
-🕒 01 April 2026 pukul 18.15.00 WIB
+🕒 01 April 2026 18.15.00 WIB
 ```
 
 Pesan juga perlu membedakan waktu pengamatan sumber dan waktu fetch aplikasi bila keduanya tersedia.

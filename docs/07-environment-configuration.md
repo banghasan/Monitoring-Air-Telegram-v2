@@ -18,11 +18,11 @@ LOG_FORMAT=json
 
 # Telegram
 TELEGRAM_BOT_TOKEN=replace-me
-TELEGRAM_MODE=polling
+TELEGRAM_WEBHOOK_ENABLED=false
 TELEGRAM_OWNER_ID=
 TELEGRAM_ADMIN_IDS=
 
-# Future webhook mode; tidak dipakai pada tahap polling
+# Isi URL dan secret hanya jika TELEGRAM_WEBHOOK_ENABLED=true
 TELEGRAM_WEBHOOK_URL=
 TELEGRAM_WEBHOOK_SECRET=
 
@@ -64,6 +64,10 @@ PUBLIC_COMMAND_COOLDOWN_SECONDS=1
 - `ID_PINTU_AIR` dan `KODE_STASIUN` tidak disimpan sebagai konfigurasi identity.
 - `APP_VERSION` untuk runtime sebaiknya diambil dari `package.json`; environment tidak boleh menjadi sumber versi kedua yang berbeda.
 - `APP_ROLE` menentukan role container: `bot` atau `monitor`.
+- `TELEGRAM_WEBHOOK_ENABLED=false` menurunkan mode menjadi polling.
+- `TELEGRAM_WEBHOOK_ENABLED=true` menurunkan mode menjadi webhook dan mewajibkan URL serta secret.
+- Nilai webhook flag selain `true` atau `false` ditolak saat startup; tidak otomatis dianggap `false`.
+- `TELEGRAM_MODE` sudah tidak digunakan; jika masih ada pada environment lama, startup menolaknya agar migrasi tidak ambigu.
 
 ## Monitoring variable
 
@@ -133,4 +137,4 @@ Saat startup, aplikasi perlu menolak konfigurasi yang:
 - `PUBLIC_COMMAND_COOLDOWN_SECONDS` bukan angka duration yang valid;
 - status endpoint internal aktif tetapi URL/token tidak lengkap;
 - role `monitor` tidak memiliki path state SQLite yang dapat ditulis;
-- webhook configuration tidak lengkap jika mode webhook kelak diaktifkan.
+- webhook configuration tidak lengkap jika `TELEGRAM_WEBHOOK_ENABLED=true`.

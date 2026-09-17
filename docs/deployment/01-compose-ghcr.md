@@ -100,7 +100,7 @@ Contoh `.env` production harus menyediakan minimal:
 
 ```dotenv
 TELEGRAM_BOT_TOKEN=replace-with-real-secret
-TELEGRAM_MODE=polling
+TELEGRAM_WEBHOOK_ENABLED=false
 TELEGRAM_OWNER_ID=123456789
 TELEGRAM_ADMIN_IDS=
 

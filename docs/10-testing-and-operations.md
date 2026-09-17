@@ -11,7 +11,7 @@ Aturan detail tentang fixture, isolasi unit test, `bun test`, lint, type-check, 
 - ID/kode berubah tidak membuat selector gagal.
 - Nol hasil menghasilkan status data tidak tersedia.
 - Lebih dari satu hasil menghasilkan status ambigu.
-- Record tanpa koordinat tidak menghasilkan button peta.
+- Record tanpa koordinat tidak menghasilkan inline link peta pada nama stasiun.
 
 ## Format nilai
 
@@ -34,10 +34,14 @@ Aturan detail tentang fixture, isolasi unit test, `bun test`, lint, type-check, 
 ## Telegram Rich Message
 
 - Semua command mengirim Rich Message.
-- `📋 Keterangan` dan `🧭 Legenda` collapsed.
+- `📋 Keterangan & Legenda` berada dalam satu details collapsed.
+- Waktu pengambilan aplikasi berada di dalam details, bukan di data utama.
+- Threshold ditampilkan sebagai tabel Rich Message.
 - Button refresh mencoba edit dahulu.
 - Jika edit gagal/tidak didukung, fallback mengirim pesan baru.
-- Button peta memakai koordinat record aktif.
+- Nama stasiun menjadi inline link peta memakai koordinat record aktif jika tersedia.
+- URL sumber dan URL peta tidak tampil sebagai teks mentah.
+- Status utama hanya memakai emoji status, misalnya `🟢 Status : Normal`, tanpa emoji dekoratif tambahan.
 - `/ping` menampilkan durasi proses.
 
 ## Monitoring worker

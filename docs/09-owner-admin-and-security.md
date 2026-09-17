@@ -14,7 +14,7 @@ Identitas akses memakai Telegram `from.id`. Username tidak digunakan sebagai kun
 
 Informasi yang boleh ditampilkan:
 
-- mode update aktif: `polling`;
+- mode update aktif (`polling` atau `webhook`, diturunkan dari `TELEGRAM_WEBHOOK_ENABLED`);
 - nama dan versi aplikasi;
 - versi Bun/runtime jika tersedia;
 - uptime process;

@@ -22,6 +22,7 @@ export interface AppConfig {
   };
   telegram: {
     token: string;
+    webhookEnabled: boolean;
     mode: TelegramMode;
     ownerId?: number;
     adminIds: number[];
@@ -122,6 +123,14 @@ function booleanValue(environment: Environment, key: string, fallback: boolean):
   if (["1", "true", "yes", "on"].includes(value)) return true;
   if (["0", "false", "no", "off"].includes(value)) return false;
   throw new ConfigurationError(`${key} harus berupa boolean`);
+}
+
+function strictBooleanValue(environment: Environment, key: string, fallback: boolean): boolean {
+  const value = environment[key]?.trim().toLowerCase();
+  if (!value) return fallback;
+  if (value === "true") return true;
+  if (value === "false") return false;
+  throw new ConfigurationError(`${key} harus berupa true atau false`);
 }
 
 function optionalNumber(environment: Environment, key: string): number | undefined {
@@ -236,14 +245,17 @@ function validateCrossFieldRules(config: AppConfig): void {
 }
 
 export function parseConfig(environment: Environment = process.env): AppConfig {
+  if (environment.TELEGRAM_MODE?.trim()) {
+    throw new ConfigurationError(
+      "TELEGRAM_MODE sudah tidak digunakan; gunakan TELEGRAM_WEBHOOK_ENABLED=true atau false",
+    );
+  }
   const role = text(environment, "APP_ROLE", DEFAULTS.role);
   if (role !== "bot" && role !== "monitor") {
     throw new ConfigurationError("APP_ROLE harus bot atau monitor");
   }
-  const mode = text(environment, "TELEGRAM_MODE", "polling");
-  if (mode !== "polling" && mode !== "webhook") {
-    throw new ConfigurationError("TELEGRAM_MODE harus polling atau webhook");
-  }
+  const webhookEnabled = strictBooleanValue(environment, "TELEGRAM_WEBHOOK_ENABLED", false);
+  const mode: TelegramMode = webhookEnabled ? "webhook" : "polling";
 
   const config: AppConfig = {
     app: {
@@ -257,6 +269,7 @@ export function parseConfig(environment: Environment = process.env): AppConfig {
     },
     telegram: {
       token: required(environment, "TELEGRAM_BOT_TOKEN"),
+      webhookEnabled,
       mode,
       ownerId: optionalNumber(environment, "TELEGRAM_OWNER_ID"),
       adminIds: parseIdList(environment, "TELEGRAM_ADMIN_IDS"),

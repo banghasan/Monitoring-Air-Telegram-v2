@@ -1,6 +1,8 @@
 import type {
   InputRichBlock as InputRichBlockDefinition,
   InputRichMessage as InputRichMessageDefinition,
+  RichBlockTableCell,
+  RichText,
 } from "@grammyjs/types";
 import type { WaterReading } from "../../domain/water/types.js";
 import {
@@ -23,7 +25,7 @@ export interface AirMessageFreshness {
   sourceFresh?: boolean;
 }
 
-function paragraph(text: string): InputRichBlock {
+function paragraph(text: RichText): InputRichBlock {
   return { type: "paragraph", text };
 }
 
@@ -31,9 +33,28 @@ function divider(): InputRichBlock {
   return { type: "divider" };
 }
 
-function stationLink(reading: WaterReading): string {
-  if (reading.latitude === undefined || reading.longitude === undefined) return reading.stationName;
-  return `${reading.stationName}\nhttps://www.google.com/maps?q=${reading.latitude},${reading.longitude}`;
+function linkedText(text: string, url: string): RichText {
+  return { type: "url", text, url };
+}
+
+function stationText(reading: WaterReading): RichText {
+  const mapUrl = stationMapUrl(reading);
+  if (!mapUrl) return `📍 ${reading.stationName}`;
+  return ["📍 ", linkedText(reading.stationName, mapUrl)];
+}
+
+function stationMapUrl(reading: WaterReading): string | undefined {
+  if (reading.latitude === undefined || reading.longitude === undefined) return undefined;
+  return `https://www.google.com/maps?q=${reading.latitude},${reading.longitude}`;
+}
+
+function tableCell(text: RichText, isHeader = false): RichBlockTableCell {
+  return {
+    text,
+    align: "left",
+    valign: "middle",
+    ...(isHeader ? { is_header: true as const } : {}),
+  };
 }
 
 function dataBlocks(
@@ -43,11 +64,10 @@ function dataBlocks(
 ): InputRichBlock[] {
   const trend = trendFromReading(reading);
   return [
-    paragraph(`📍 ${stationLink(reading)}`),
-    paragraph(`  ├ 🕒 ${formatObservedAt(reading, timezone)}`),
-    paragraph(`  ├ 📥 Diambil aplikasi: ${formatFetchedAt(reading.fetchedAt, timezone)}`),
-    paragraph(`  ├ 🌊 ${trendLabel(trend)} · Ketinggian: ${formatCm(reading.heightRaw)} cm`),
-    paragraph(`  └ 🚦 ${statusEmoji(reading.statusRaw)} ${reading.statusRaw}`),
+    paragraph(stationText(reading)),
+    paragraph(`    ├ 🕒 ${formatObservedAt(reading, timezone)}`),
+    paragraph(`    ├ ${trendLabel(trend)} · Ketinggian: ${formatCm(reading.heightRaw)} cm`),
+    paragraph(`    └ ${statusEmoji(reading.statusRaw)} ${reading.statusRaw}`),
     ...(freshness.kind ? [paragraph(`📦 Data: ${freshness.kind}`)] : []),
     ...(freshness.kind === "stale" || freshness.sourceFresh === false
       ? [paragraph("⚠️ Data terakhir berhasil diambil, tetapi belum dapat diperbarui.")]
@@ -55,17 +75,27 @@ function dataBlocks(
   ];
 }
 
-function detailsBlocks(reading: WaterReading): InputRichBlock[] {
+function detailsBlocks(reading: WaterReading, timezone: string): InputRichBlock[] {
   return [
     {
       type: "details",
-      summary: "📋 Keterangan",
-      blocks: thresholdSummary(reading.thresholds).map(paragraph),
-    },
-    {
-      type: "details",
-      summary: "🧭 Legenda",
-      blocks: [paragraph("📈 naik"), paragraph("📉 turun"), paragraph("➡️ tetap")],
+      summary: "📋 Keterangan & Legenda",
+      blocks: [
+        paragraph(`📥 Diambil aplikasi: ${formatFetchedAt(reading.fetchedAt, timezone)}`),
+        {
+          type: "table",
+          is_bordered: true,
+          is_compact: true,
+          cells: [
+            [tableCell("Status", true), tableCell("Batas TMA", true)],
+            ...thresholdSummary(reading.thresholds).map((row) => [
+              tableCell(row.status),
+              tableCell(row.range),
+            ]),
+          ],
+        },
+        paragraph("🧭 Legenda: 📈 naik · 📉 turun · ➡️ tetap"),
+      ],
     },
   ];
 }
@@ -77,24 +107,13 @@ export function buildAirRichMessage(
 ): InputRichMessage {
   const blocks: InputRichBlock[] = [
     { type: "heading", size: 2, text: "🌊 PEMANTAUAN TINGGI MUKA AIR (TMA)" },
-    paragraph(`🌐 Sumber: Posko Banjir DKI Jakarta\n${reading.sourceUrl}`),
+    paragraph(["🌐 Sumber: ", linkedText("Posko Banjir DKI Jakarta", reading.sourceUrl), "\n\n"]),
     ...dataBlocks(reading, timezone, freshness),
     divider(),
-    ...detailsBlocks(reading),
+    ...detailsBlocks(reading, timezone),
     {
       type: "buttons",
-      buttons: [
-        { text: "🔄 Segarkan", style: "primary", callback_data: REFRESH_CALLBACK },
-        ...(reading.latitude === undefined || reading.longitude === undefined
-          ? []
-          : [
-              {
-                text: "🗺️ Buka Peta",
-                style: "link" as const,
-                url: `https://www.google.com/maps?q=${reading.latitude},${reading.longitude}`,
-              },
-            ]),
-      ],
+      buttons: [{ text: "🔄 Segarkan", style: "primary", callback_data: REFRESH_CALLBACK }],
     },
   ];
   return { blocks };
@@ -110,13 +129,13 @@ export function buildAirNotificationRichMessage(
     { type: "heading", size: 2, text: "🔔 PEMBARUAN TINGGI MUKA AIR" },
     ...dataBlocks(reading, timezone),
     paragraph(
-      `📣 Perubahan status:\n  └ ${previousStatus} → ${reading.statusRaw.replace(/^status\s*:\s*/i, "")}`,
+      `📣 Perubahan status:\n    └ ${previousStatus} → ${reading.statusRaw.replace(/^status\s*:\s*/i, "")}`,
     ),
     paragraph(
-      `🌊 Pembacaan saat perubahan:\n  ├ Ketinggian: ${formatCm(reading.heightRaw)} cm\n  └ Arah: ${trendLabel(trend)}`,
+      `🌊 Pembacaan saat perubahan:\n    ├ Ketinggian: ${formatCm(reading.heightRaw)} cm\n    └ Arah: ${trendLabel(trend)}`,
     ),
     divider(),
-    ...detailsBlocks(reading),
+    ...detailsBlocks(reading, timezone),
   ];
   return { blocks };
 }

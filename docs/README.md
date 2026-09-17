@@ -17,7 +17,7 @@ MVP sudah diimplementasikan dan diverifikasi dengan unit test, integration test,
 - Bot memakai polling pada deployment awal; webhook sudah disiapkan sebagai mode alternatif.
 - Bot dan monitor berjalan sebagai service/container terpisah dari image yang sama.
 - Monitor menyimpan state di `bun:sqlite`; bot membaca ringkasan melalui endpoint internal.
-- Semua pesan bot dan notifikasi memakai Rich Message; Keterangan dan Legenda collapsed; button berada di payload Rich Message.
+- Semua pesan bot dan notifikasi memakai Rich Message; Keterangan dan Legenda berada dalam satu summary collapsed; threshold memakai tabel; button berada di payload Rich Message.
 - Log aplikasi berupa NDJSON di stdout/stderr.
 
 ## Navigasi
